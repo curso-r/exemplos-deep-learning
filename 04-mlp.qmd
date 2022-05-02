@@ -1,0 +1,87 @@
+---
+title: "Multi-Layer Perceptron"
+jupyter: python3
+---
+
+Nesse exemplos ajustamos um multi-layer perceptron para dados simulados.
+A diferença para o que fizemos nos exemplos anteriores, é que fica mais fácil
+usar a notação matricial especificar as contas.
+
+O Keras já usa a notação matricial, por isso, podemos ver que o código no Keras
+muda bem pouco.
+
+```{python}
+import numpy as np
+from tensorflow import keras
+```
+
+Veja que nesse exemplo a geração dos dados é um pouco mais complicada. Usamos
+a mesma idéia do MLP.
+
+```{python}
+n = 1000
+
+# uma matriz com `n` observações e 2 colunas. 
+# valores aleatórios obtidos da distribuição uniforme.
+X = np.random.uniform(size=(n, 2))
+
+# função relu, usada comunmente como função de ativação em 
+# redes neurais.
+def relu(x):
+    return x * (x > 0)
+
+# Dois conjuntos de pesos: W e B para a primeira camada, V e a para a segunda.
+W = np.array([[0.2, 0.7], [-0.4, 0.5]])
+B = np.array([0.1, -0.2])
+V = np.array([[0.6], [0.7]])
+a = 0.9
+
+# O y é gerado dessa forma
+# `np.dot()` é a mesma coisa que multiplição de matrizes.
+y = relu(np.dot(X, W) + B)
+y = np.dot(y, V) + a
+```
+
+Agora que os dados foram gerados vamos definir o modelo. Pontos importantes:
+
+1. A camada de input agora tem shape `(2,)`, isto é o input é uma matriz com `n`
+linhas e **`2`** colunas.
+2. A camada *escondida* (hidden layer) do modelo possui `1000` unidades (ou neurônios).
+A função de ativação é `relu`. É muito importante que as camadas intermediárias do MLP
+possuam uma função de ativação.
+
+```{python}
+input = keras.layers.Input(shape=(2,))
+hidden = keras.layers.Dense(units=1000, activation="relu")(input)
+output = keras.layers.Dense(units=1)(hidden)
+
+model = keras.Model(inputs=input, outputs=output)
+model.summary()
+```
+
+A quantidade de parâmetros da primeira camada é dada por:
+
+- 2 parâmetros para cada neurônio (um por coluna do input) = 2000
+- 1 viés para cada neurônio = 1000
+- **Total**: 3000 
+
+Para a camada de output temos fazemos:
+
+- 1000 parâmetros para cada neurônio = 1000
+- 1 viés para cada neurônios = 1
+- **Total** = 1001
+
+Agora da mesma forma que nos exemplos anteriores definimos a loss e o otimizador.
+Veja que o Keras também permite usar strings para definir esses atributos - `'mse'` é
+um atalho para `keras.losses.mean_squared_error`.
+
+```{python}
+model.compile(loss="mse", optimizer="sgd")
+```
+
+Finalmente podemos ajustar o modelo:
+
+```{python}
+history = model.fit(x=X, y=y, batch_size=10, epochs=5, verbose=2)
+```
+

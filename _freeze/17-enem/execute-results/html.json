@@ -1,0 +1,11 @@
+{
+  "hash": "6b4a177731f40b61ebc335e2711a05fe",
+  "result": {
+    "markdown": "---\ntitle: Enem\nexecute:\n  eval: false\n---\n\nNesse exemplo vamos fazer um modelo para classificar as perguntas do ENEM eu seus\nrespectivos temas.\n\n::: {.cell execution_count=1}\n``` {.python .cell-code}\nimport pandas as pd\nfrom tensorflow import keras\n```\n:::\n\n\nCarregando os dados:\n\n::: {.cell execution_count=2}\n``` {.python .cell-code}\ndf = pd.read_csv(\"https://storage.googleapis.com/deep-learning-com-r/banco_de_questoes.csv\",encoding = 'latin2', sep = \";\")]\ndf\n```\n:::\n\n\nVamos separar a resposta e dados de treino\n\n::: {.cell execution_count=3}\n``` {.python .cell-code}\ndf.grande_tema.value_counts()\ny = df.grande_tema.astype('category').cat.codes.astype(\"int32\").to_numpy()\nx = df.enunciados.astype(\"str\").to_numpy()\n```\n:::\n\n\nAgora vamos criar a camada de vetorização:\n\n::: {.cell execution_count=4}\n``` {.python .cell-code}\nvectorize = keras.layers.TextVectorization(\n  max_tokens = 10000,\n  pad_to_max_tokens=True\n)\nvectorize.adapt(x)\nvocab = vectorize.get_vocabulary()\n```\n:::\n\n\nEntão podemos definir o modelo\n\n::: {.cell execution_count=5}\n``` {.python .cell-code}\ninput = keras.layers.Input(shape=(), dtype=\"string\")\noutput = vectorize(input)\noutput = keras.layers.Embedding(input_dim=len(vocab), output_dim=256)(output)\noutput = keras.layers.LSTM(units=256)(output)\noutput = keras.layers.Dense(units=256, activation=\"relu\")(output)\noutput = keras.layers.Dense(units=y.max() + 1, activation=\"softmax\")(output)\n```\n:::\n\n\nCompilar e ajustar\n\n::: {.cell execution_count=6}\n``` {.python .cell-code}\nmodel = keras.Model(inputs=input, outputs=output)\nauc = keras.metrics.AUC(curve=\"ROC\")\nmodel.compile(loss=\"categorical_crossentropy\", optimizer=\"adam\", metrics=[auc, \"accuracy\"])\nmodel.summary()\n```\n:::\n\n\n::: {.cell execution_count=7}\n``` {.python .cell-code}\nmodel.fit(\n  x=x, \n  y=keras.utils.to_categorical(y)\n)\n```\n:::\n\n\n",
+    "supporting": [
+      "17-enem_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

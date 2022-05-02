@@ -1,0 +1,90 @@
+---
+title: "RNN's"
+jupyter: python3
+---
+
+Nesse exemplo usar RNN's básicas para classificar de sequências simuladas.
+
+```{python}
+import numpy as np
+from tensorflow import keras
+```
+
+Vamos gerar sequências de números aleatórios que podem ser crescentes ou decrescentes:
+
+1. Definimos se a sequência vai ser crescente ou decrescente,
+2. Para cada sequencia, geramos `l` números aleatórios. 
+3. Se a sequência for crescente, ordenamos os números de forma crescente, se não for, ordenamos de forma decrescente.
+
+```{python}
+n = 10000
+l = 10
+
+cresc = np.random.randint(0, 2, size=(n,))
+x = np.empty((n, l), dtype=np.float32)
+for i, cr in enumerate(cresc):
+    tmp = np.random.uniform(size=(l,))
+    if cr == 1:
+        x[i, :] = tmp[np.argsort(tmp)]
+    else:
+        x[i, :] = tmp[np.argsort(-tmp)]
+x = x.reshape((n, l, 1))
+```
+
+Agora vamos definir o modelo no Keras. Não vamos nos preocupar com os
+parâmetros nem nada ainda. A seguir vamos mostrar exatamente as contas que o Keras está fazendo por trás.
+
+```{python}
+input = keras.layers.Input(shape=(l, 1))
+output = keras.layers.SimpleRNN(units=1, activation="tanh", use_bias=False)(input)
+output = keras.layers.Activation("sigmoid")(output)
+model = keras.Model(inputs=input, outputs=output)
+
+model.compile(loss="binary_crossentropy", optimizer=keras.optimizers.Adam(learning_rate=0.01), metrics="accuracy")
+```
+
+Agora ajustamos o modelo:
+
+```{python}
+#| layout-ncol: 1
+#| column: screen-right
+model.fit(x=x, y=cresc, epochs=10, verbose=2)
+```
+
+Vimos que a RNN consegue prever bem se a sequência é crescente ou decrescente.
+
+Agora vamos ver exatamente as contas que o Keras faz. 
+Primeiro, definimos a função sigmoid.
+
+```{python}
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+```
+
+Depois, pegamos o valor do peso estimado pelo Keras:
+
+```{python}
+w_rnn = model.layers[1].get_weights()
+```
+
+Vamos escolher a primeira observação, para mostrar a conta:
+
+```{python}
+x_ = x[0]
+```
+
+Agora o loop que acontece dentro da RNN. Começando com um estado inicial `s=0`, fazemos:
+
+```{python}
+s = 0.0
+for i in range(l):
+    s = np.tanh(w_rnn[0] * x_[i] + w_rnn[1] * s)
+sigmoid(s)
+```
+
+Em cada passo o estado é atualizado com um peso para o estado anterior e outro para a nova observação, passando por uma função de ativação.
+Podemos comparar isso com o resultado do Keras:
+
+```{python}
+model.predict(x)[0]
+```

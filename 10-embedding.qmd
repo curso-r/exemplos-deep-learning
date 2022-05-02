@@ -1,0 +1,81 @@
+---
+title: "Word embeddings"
+jupyter: python3
+---
+
+Nesse exemplo vamos mostrar como usar a camada de embeddings. Antes de usá-la
+precisamos transformar cada texto em uma sequência de inteiros, como vimos
+no [exemplo anterior](./09-text-vectorization.html).
+
+Para isso, usamos a camada `TextVectorization`. Note que dsta camada é um pouco
+diferente das demais, pois, precisamos 'adaptá-la' antes de usar.
+
+O parâmetro `max_tokens` diz o número máximo de palavras que a camada vai guardar
+no seu vocabulário. Isso é usado quando não queremos que palavras que aparecem
+muito pouco tenham um número inteiro atribuido.
+
+O `output_mode='int'` indica que queremos transformar cada palavra em um número inteiro.
+Existem outras formas de vetorizar (por exemplo tf-idf) mas não vamos usá-las em
+deep learning.
+
+```{python}
+from tensorflow import keras
+layer = keras.layers.TextVectorization(max_tokens=10, output_mode="int",)
+```
+
+Agora vamos adaptar a camada para um conjunto de frases:
+
+```{python}
+frases = [
+    "eu gosto de gatos",
+    "eu gosto de cachorros",
+    "eu gosto de gatos e cachorros",
+]
+
+layer.adapt(frases)
+vocab = layer.get_vocabulary()
+```
+
+Agora podemos definir um input, passar a camada de vetorização e em seguida definir a
+camada de embeddings.
+O parâmetro `input_dim` da camada `Embedding` indica o número de tokens possíveis.
+No nosso caso, esse número é o tamanho do vocabulário.
+A camada de embedding faz cada palavra ser representada por um vetorizinho. O parâmetro
+`output_dim` indica o tamanho desse vetor. No exemplo, cada palavra será representada
+por um vetor de tamanho 2.
+
+```{python}
+input = keras.layers.Input(shape=(), dtype="string")
+vec = layer(input)
+output = keras.layers.Embedding(input_dim=len(vocab), output_dim=2)(vec)
+```
+
+Agora podemos criar um modelo:
+
+```{python}
+model = keras.Model(inputs=input, outputs=output)
+model.summary()
+```
+
+A camada de embeddings possui `len(vocab)*2` parâmetros. Isto é, 2 parâmetros
+para cada palavra do vocabulário.
+
+Agora vamos ver como uma frase fica representada pela camada de embeddings:
+
+```{python}
+model.predict(frases)[0]
+```
+
+Também podemos observar a matriz de embeddings:
+
+```{python}
+model.get_weights()[1]
+```
+
+Cada linha aqui é um vetor que representa uma palavra do vocabulário. A order é a mesma
+que aparece em `vocab`:
+
+```{python}
+print(vocab)
+```
+

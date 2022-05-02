@@ -1,0 +1,11 @@
+{
+  "hash": "f576d032380aba2eaaf1868785df1344",
+  "result": {
+    "markdown": "---\ntitle: Exemplos de Deep Learning\n---\n\nEsse site contém códigos de exemplos de deep learning usando Python. O objetivo é ter estes exemplos com bastante comentários para que o leitor consiga seguí-los sem precisar assistir a aula.\n\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

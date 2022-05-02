@@ -1,0 +1,6 @@
+---
+title: "Exemplos de Deep Learning"
+jupyter: python3
+---
+
+Esse site contém códigos de exemplos de deep learning usando Python. O objetivo é ter estes exemplos com bastante comentários para que o leitor consiga seguí-los depois de ter visto a aula, mas sem precisar acompanhar o vídeo linha por linha.

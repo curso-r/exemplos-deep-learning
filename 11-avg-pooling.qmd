@@ -1,0 +1,103 @@
+---
+title: "Pooling"
+jupyter: python3
+---
+
+Nesse exemplo vamos usar as camadas de TextVectorization do [exemplo 09](./09-text-vectorization.qmd) e a camada de embedding do [exemplo anterior](./10-embedding.qmd) para transformar cada palavra em um vetor com 1 elemento.
+
+Em seguida vamos considerar que cada texto (no caso do banco de dados, comentários feiros em forum da internet) pode ser representado pela média das palavras que têm nele. Usar a média é também chamado de `GlobalAveragePooling` no Keras:
+
+```{python}
+from tensorflow import keras
+import pandas as pd
+import seaborn as sns
+import numpy as np
+```
+
+Vamos carregar o banco de dados:
+
+```{python}
+dataset = pd.read_csv(
+    "https://storage.googleapis.com/deep-learning-com-r/toxic-comments.csv"
+)
+dataset.head()
+```
+
+Nosso objetivo será, a partir do texto do comentário, classificar em tóxico ou não tóxico.
+
+```{python}
+x = dataset['comment_text'].to_numpy()
+y = dataset.iloc[:,2].to_numpy()
+```
+
+Para escolher o valor de `output_sequence_length`, isto é, o número máximo de palavras em cada texto, fazemos um histograma do número de palavras por texto:
+
+```{python}
+numero_palavras = [len(i.split()) for i in x]
+sns.histplot(numero_palavras)
+```
+
+Como a maioria dos textos possui menos do que 150 palavras, escolhemos que o tamanho máximo é 150. Dessa forma, se um texto for muito grande, usamos apenas as primeiras 150 palavras para classificar em tóxico/não tóxico. Isso vai permitir que o modelo fique muito mais rápido.
+
+Vamos então criar a camada de vetorização e adaptá-la:
+
+```{python}
+vectorize = keras.layers.TextVectorization(
+    max_tokens=10000, output_mode="int", output_sequence_length=150
+)
+
+vectorize.adapt(x)
+vocab = vectorize.get_vocabulary()
+```
+
+Agora vamos definir o modelo. Lembre que cada palavra será representada por um vetor pela camada de embedding e queremos que a média desses valores represente a probabilidade do texto ser tóxicou ou não.
+
+```{python}
+input = keras.layers.Input(shape=(), dtype="string")
+output = vectorize(input)
+output = keras.layers.Embedding(input_dim=len(vocab), output_dim=1)(output)
+output = keras.layers.GlobalAveragePooling1D()(output)
+output = keras.layers.Activation("sigmoid")(output)
+
+model = keras.Model(inputs=input, outputs=output)
+model.summary()
+```
+
+Nesse modelo, o número de parâmetros é igual ao número de palavras que temos no vocabulário.
+
+Agora podemos compilar o modelo. Vamos usar a 'binary_crossentropy' pois o problema é de classificação binária. Além da acurácia, vamos medir o AUC, uma vez que o problema é bem desbalanceado (muitos zeros e poucos uns).
+
+```{python}
+auc = keras.metrics.AUC(curve="ROC")
+model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy", auc])
+```
+
+Agora vamos ajustar o modelo:
+
+```{python}
+model.fit(x, y, epochs=5, batch_size=32, validation_split=0.2, verbose=2)
+```
+
+Podemos indetificar as palavras com os maiores e menores valores de embedding. Como o texto é classificado em tóxico/não tóxico com base na média dos valores das palavras dele, palavras com valores altos ajudam a classificar o texto como tóxico e palavras com valores baixos ajudam a considerar o texto como não tóxico.
+
+```{python}
+embeddings = model.get_weights()[1]
+words = pd.DataFrame.from_dict({
+  "word": vocab,
+  "embedding": embeddings[:,0]
+})
+```
+
+As 10 palavras com maires valores de embeddings são:
+
+```{python}
+words.sort_values("embedding", ascending = False).head(10)
+```
+
+E as 10 palavras com menores valores são:
+
+```{python}
+words.sort_values("embedding", ascending = True).head(10)
+```
+
+Vemos que os embeddings que são comportaram como imaginávamos. Maiores valores indicam palavras que levam à textos tóxicos e valores menores levam a textos não tóxicos.

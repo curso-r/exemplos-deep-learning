@@ -1,0 +1,47 @@
+project:
+  type: website
+  render:
+    - "*.qmd"
+  
+execute:
+  freeze: true
+
+website:
+  title: "Exemplos Deep Learning"
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+      - section: "Fundamentos"
+        contents:
+          - 01-linear-regression.qmd
+          - 02-sgd.qmd
+          - 03-keras.qmd
+          - 04-mlp.qmd
+          - 05-logistic-regression.qmd
+      - section: "Visão computacional"
+        contents: 
+          - 06-convolution.qmd
+          - 07-conv-mnist.qmd
+          - 08-tfhub.qmd
+      - section: "NLP"
+        contents:
+          - 09-text-vectorization.qmd
+          - 10-embedding.qmd
+          - 11-avg-pooling.qmd
+          - 12-simple-rnn.qmd
+          - 13-simple-lstm.qmd
+          - 14-lstm.qmd
+          - 15-nlp-tfhub.qmd
+      - section: "Misc"
+        contents:
+          - 16-quora.qmd
+          - 17-enem.qmd
+        
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+
+editor: visual
+

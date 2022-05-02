@@ -1,0 +1,70 @@
+---
+title: "Enem"
+execute: 
+  eval: false
+jupyter: python3
+---
+
+Nesse exemplo vamos fazer um modelo para classificar as perguntas do ENEM eu seus
+respectivos temas.
+
+```{python}
+import pandas as pd
+from tensorflow import keras
+```
+
+Carregando os dados:
+
+```{python}
+df = pd.read_csv("https://storage.googleapis.com/deep-learning-com-r/banco_de_questoes.csv",encoding = 'latin2', sep = ";")]
+df
+```
+
+Vamos separar a resposta e dados de treino
+
+```{python}
+df.grande_tema.value_counts()
+y = df.grande_tema.astype('category').cat.codes.astype("int32").to_numpy()
+x = df.enunciados.astype("str").to_numpy()
+```
+
+Agora vamos criar a camada de vetorização:
+
+```{python}
+vectorize = keras.layers.TextVectorization(
+  max_tokens = 10000,
+  pad_to_max_tokens=True
+)
+vectorize.adapt(x)
+vocab = vectorize.get_vocabulary()
+```
+
+Então podemos definir o modelo
+
+```{python}
+input = keras.layers.Input(shape=(), dtype="string")
+output = vectorize(input)
+output = keras.layers.Embedding(input_dim=len(vocab), output_dim=256)(output)
+output = keras.layers.LSTM(units=256)(output)
+output = keras.layers.Dense(units=256, activation="relu")(output)
+output = keras.layers.Dense(units=y.max() + 1, activation="softmax")(output)
+```
+
+Compilar e ajustar
+
+```{python}
+model = keras.Model(inputs=input, outputs=output)
+auc = keras.metrics.AUC(curve="ROC")
+model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=[auc, "accuracy"])
+model.summary()
+```
+
+```{python}
+model.fit(
+  x=x, 
+  y=keras.utils.to_categorical(y)
+)
+```
+
+
+

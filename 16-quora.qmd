@@ -1,0 +1,106 @@
+---
+title: "Quora"
+jupyter: python3
+execute:
+  eval: false
+---
+
+Exemplo de modelo para comparação de duas perguntas do Quora. Originalmente o banco de dados a seguir apareceu em uma competição do [Kaggle](https://kaggle.com), o objetivo era, dado um par de perguntas responder se elas eram duplicadas ou não.
+
+```{python}
+#| eval: true
+import pandas as pd
+from tensorflow import keras
+import numpy as np
+```
+
+Primeiro baixamos o banco de dados:
+
+```{python}
+#| eval: true
+dataset = pd.read_csv("https://storage.googleapis.com/deep-learning-com-r/quora.csv.zip")
+```
+
+Veja alguns dos pares de perguntas:
+
+```{python}
+#| eval: true
+dataset.head(5)
+```
+
+Vamos arrumar um pouquinho os dados, colocando em variáveis:
+
+```{python}
+#| eval: true
+p1 = dataset["question1"].to_numpy().astype("str")
+p2 = dataset["question2"].to_numpy().astype("str")
+y = dataset["is_duplicate"].to_numpy().astype("float")
+```
+
+Então podemos definir a camada de vetorização. Lembre-se que essa camada precisa
+ser 'adaptada' antes de ser usada.
+
+```{python}
+#| eval: true
+vectorize = keras.layers.TextVectorization(max_tokens=50000, output_mode="int",
+            pad_to_max_tokens=True)
+vectorize.adapt(np.append(p1, p2))
+```
+
+Agora vamos definir o modelo:
+
+-   Esse modelo possui dois inputs: a pergunta 1 e a pergunta 2.
+-   Queremos que o nosso modelo retorne a probabilidade das duas perguntas serem duplicadas.
+-   Queremos que para o modelo não importe a ordem das perguntas. Isto é, se trocarmos a pergunta 1 pela pergunta 2 deveria dar a mesma probabilidade.
+
+Vamos definir o modelo no Keras:
+
+```{python}
+#| eval: true
+pergunta1 = keras.layers.Input(shape=(), dtype="string")
+pergunta2 = keras.layers.Input(shape=(), dtype="string")
+```
+
+Agora, queremos colocar camadas capazes de transformar cada pergunta em um vetor.
+Poderíamos usar um modelo pré-treinado, mas nesse exemplo vamos fazer do zero.
+
+```{python}
+#| eval: true
+input = keras.layers.Input(shape=(), dtype="string")
+encoded = vectorize(input)
+encoded = keras.layers.Embedding(len(vectorize.get_vocabulary()), 256)(encoded)
+encoded = keras.layers.LSTM(units=128)(encoded)
+encode_sequence = keras.Model(inputs=input, outputs=encoded)
+```
+
+Agora que definimos o submodelo, vamos continuar a definição do modelo inicial.
+
+```{python}
+#| eval: true
+vetor_pergunta1 = encode_sequence(pergunta1)
+vetor_pergunta2 = encode_sequence(pergunta2)
+```
+
+`vetor_pergunta(1|2)` é um vetor que representa cada uma das perguntas. Podemos calcular uma medida de distância entre esses dois vetores para determinar se as perguntas são parecidas ou não.
+
+```{python}
+#| eval: true
+output = keras.layers.Dot(axes=1)([vetor_pergunta1, vetor_pergunta2])
+output = keras.layers.Dense(units=1, activation="sigmoid")(output)
+```
+
+Podemos então definir o modelo:
+
+```{python}
+#| eval: true
+model = keras.Model(inputs=[pergunta1, pergunta2], outputs=output)
+model.summary()
+```
+
+Agora é só compilar e ajustar:
+
+```{python}
+auc = keras.metrics.AUC(curve="ROC")
+model.compile(loss="binary_crossentropy", optimizer="sgd", metrics=["accuracy", auc])
+model.fit(x=(p1, p2), y=y, epochs=5, batch_size=32, validation_split=0.2, verbose=1)
+```

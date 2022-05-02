@@ -1,0 +1,84 @@
+---
+title: "Modelos pré-treinados"
+jupyter: python3
+---
+
+Neste exemplo, ao invés de treinarmos um modelo convolucional do zero, como fizemos
+no [exemplo 07](./07-conv-mnist.html), vamos usar um modelo pré treinado. Para isso
+usaremos o TensorFlow Hub - bibilioteca que facilita todas as etapas para usar modelos
+pré treinados.
+
+```{python}
+from tensorflow import keras
+import tensorflow_hub as hub
+import matplotlib.pyplot as plt
+```
+
+A base de dados que vamos usar será o CIFAR10 que pode ser carregada no Keras com:
+
+```{python}
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
+```
+
+Podemos visualizar algumas imagens:
+Agora podemos visualizar algumas imagens do banco de dados:
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 3
+plt.imshow(x_train[0])
+plt.show()
+plt.imshow(x_train[1])
+plt.show()
+plt.imshow(x_train[2])
+plt.show()
+```
+
+Vamos agora definir o modelo. Ponto importantes:
+
+1. Cada modelo no tfhub possui uma documentação ([exemplo](https://tfhub.dev/google/imagenet/mobilenet_v1_100_224/feature_vector/5)) que vai falar o formato esperado da imagem. No caso deste MobileNet que estamos usando é esperado que a imagem tenha cores como valores entre 0 e 1 e que a imagem tenha tamanho 224x224.
+2. Usamos as camadas `Rescaling` e `Resizing` mudar as cores de inteiros de [1,255] em
+valores entre 0 e 1 e para aumentar o tamanho das imagens de 32x32 para 224x224.
+3. Para usar o modelo pré treinado, basta passar a sua URL para a camada `hub.KerasLayer`. Usamos `trainable=False` pois queremos deixar fixos os pesos deste modelo.
+4. O modelo pré-treinado está transformando cada imagem em um vetor de tamanho 1024. Em seguida usamos uma regressão multinomial p/ classificar nas 10 classes do CIFAR10.
+
+```{python}
+input = keras.layers.Input(shape=(32, 32, 3))
+out = keras.layers.Rescaling(1 / 255.0)(input)
+out = keras.layers.Resizing(224, 224)(out)
+out = hub.KerasLayer(
+    handle="https://tfhub.dev/google/imagenet/mobilenet_v1_100_224/feature_vector/5",
+    trainable=False,
+)(out)
+out = keras.layers.Dropout(rate=0.2)(out)
+out = keras.layers.Dense(units=10, activation="softmax")(out)
+```
+
+Veja que a camada do TFHUB possui todos os pesos do MobileNet.
+
+```{python}
+#| layout-ncol: 1
+#| column: screen-right
+model = keras.Model(inputs=input, outputs=out)
+model.summary()
+```
+
+Agora podemos compilar o modelo:
+
+```{python}
+model.compile(
+    optimizer="adam",
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+    metrics=["accuracy"],
+)
+```
+
+Estamos usando a mesma loss que usamos no [exemplo anterior](./07-conv-mnist.html).
+Agora vamos ajustar o modelo. É esperado termos um acerto bem maior do que se tivéssemos ajustado um modelo do zero, pois o modelo pré treinado foi ajustado
+em banco de dados muito maiores e por isso tem bastante informação p/ agregar.
+
+```{python}
+#| layout-ncol: 1
+#| column: screen-right
+hist = model.fit(x_train, y_train, epochs=5, validation_split=0.2, verbose=2)
+```

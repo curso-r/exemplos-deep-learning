@@ -1,0 +1,93 @@
+---
+title: "Regressão Logística"
+jupyter: python3
+---
+
+Nesse exemplos vamos ajustar um modelo de regressão logística para dados simulados.
+O precesso de simulação dos dados lembra o [exemplo 4](./04-mlp.html).
+
+```{python}
+import numpy as np
+import seaborn as sns
+from tensorflow import keras
+from sklearn import metrics
+```
+
+Vamos gerar os dados de input:
+
+```{python}
+n = 1000
+
+X = np.random.uniform(size=(n, 2))
+W = np.array([[-0.6], [0.7]])
+B = 0.1
+```
+
+Agora vamos gerar a variável resposta. Note que primeiro geramos a probabilidade
+do `y` ser 1, usando `sigmoid(np.dot(X, W) + B)`. Em seguida, se a probabilidade
+de `y` ser igual 1 for maior do que 0.5, dizemos que ele vale 1.
+
+```{python}
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+y = sigmoid(np.dot(X, W) + B)
+print("Prob y=1", y[0:5])
+y = 1.0 * (y > 0.5)
+print("Y=", y[0:5])
+```
+
+Agora definimos o modelo. A definição é exatamente igual a definição do modelo
+da regressão linear ([exemplo 3](./03-keras.html)) exceto pela funçõ de ativação
+`sigmoid`.
+
+A função de ativação `sigmoid` faz com que output de `np.dot(X, W) + B` que acontece
+dentro da camada densa seja um número entre 0 e 1.
+
+```{python}
+input = keras.layers.Input(shape=(2,))
+output = keras.layers.Dense(units=1, activation="sigmoid")(input)
+model = keras.Model(inputs=input, outputs=output)
+
+model.summary()
+```
+
+Agora vamos *compilar* o modelo passando a função de perda, otimizador e métricas.
+Pontos importantes:
+
+1. Como o problema agora é de classificação binária (o `y` pode ter valores 0 ou 1),
+usamos a função de perda `binary_crossentropy`.
+2. Podemos passar uma lista de métricas para o Keras calcular durante o ajuste do modelo.
+Por exemplo aqui, pedimos para ele calcular a acurácia.
+
+```{python}
+model.compile(
+    loss=keras.losses.binary_crossentropy,
+    optimizer=keras.optimizers.SGD(learning_rate=0.1),
+    metrics=["accuracy"]
+)
+```
+
+Agora podemos ajustar o modelo. O parâmetro `validation_split=0.1` fala para o 
+Keras separar 10% das observações de `(x,y)` e usá-las apenas para reportar 
+métricas nessa base de validação (as observações são selecionadas de forma aleatória).
+
+```{python}
+#| column: screen-right
+history = model.fit(x=X, y=y, batch_size=32, epochs=20, validation_split=0.1,
+                    verbose=2)
+```
+
+Podemos fazer graáfio da acurácia ao longo das épocas:
+
+```{python}
+sns.lineplot(x=range(20), y=history.history["val_accuracy"])
+```
+
+E uma matriz de confusão para o ponto de corte 0.5 - isto é, se a probabilidade
+predita for maior que 0.5 classificamos como `y=1`
+
+```{python}
+metrics.confusion_matrix(y, model.predict(X) > 0.5)
+```
+

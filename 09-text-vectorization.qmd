@@ -1,0 +1,63 @@
+---
+title: "Pré-processamento"
+jupyter: python3
+---
+
+Nesse exemplo fazemos o primeiro passo do pré-processamento para modelos de texto
+em deep leanring que é transformar cada texto em uma sequência de palavras em 
+uma sequência de números inteiros.
+
+Para isso, usamos a camada `TextVectorization`. Note que dsta camada é um pouco
+diferente das demais, pois, precisamos 'adaptá-la' antes de usar.
+
+O parâmetro `max_tokens` diz o número máximo de palavras que a camada vai guardar
+no seu vocabulário. Isso é usado quando não queremos que palavras que aparecem
+muito pouco tenham um número inteiro atribuido.
+
+O `output_mode='int'` indica que queremos transformar cada palavra em um número inteiro.
+Existem outras formas de vetorizar (por exemplo tf-idf) mas não vamos usá-las em
+deep learning.
+
+```{python}
+from tensorflow import keras
+layer = keras.layers.TextVectorization(max_tokens=10, output_mode="int",)
+```
+
+Agora vamos adaptar a camada para um conjunto de frases:
+
+```{python}
+frases = [
+    "eu gosto de gatos",
+    "eu gosto de cachorros",
+    "eu gosto de gatos e cachorros",
+]
+
+layer.adapt(frases)
+```
+
+Então podemos usá-la:
+
+```{python}
+layer(frases)
+```
+
+E obter o vocabulário:
+
+```{python}
+vocab = layer.get_vocabulary()
+print(vocab)
+```
+
+Note que no vocabulário, sempre temos que o primeiro ítem é `''` e o segundo é
+`<UNK>`. Esses tokens servem para padding e para palavras desconhecidas pela camada
+de vetorização respectivamente.
+
+Por exemplo, se fizermos:
+
+```{python}
+layer("eu gosto de tubarão")
+```
+Veja que a palavra 'tubarao' foi substituida pelo inteiro representado o `<UNK>` pois
+essa palavra não aparecia quando adaptamos a camada.
+
+

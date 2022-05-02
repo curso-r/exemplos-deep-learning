@@ -1,0 +1,99 @@
+---
+title: "Regressão Linear"
+jupyter: python3
+---
+
+O objetivo desse exemplo é simular alguns dados e ajustar um modelo
+de regressão linear usando o método da descida do gradiente.
+Importante notar que queremos implementar o método da descida do gradiente de forma manual, isto é, sem usar bibliotecas que calculam 
+a derivada automaticamente.
+
+```{python}
+import numpy as np
+```
+
+Em primeiro lugar simulamos alguns dados. `x` vai ser uma variável contendo `n` valores aleatórios obtidos a partir da distribuição uniforme.
+
+```{python}
+n = 1000
+x = np.random.uniform(size=(n,))
+```
+
+Em seguida definimos os pesos `W` e `b` para a simulação. Nosso objetivo depois, vai ser *fingir* que não sabemos esses valores e ajustar um modelo para encontrá-los.
+
+```{python}
+W = 0.9
+b = 0.1
+```
+
+Definimos então a variável resposta:
+
+```{python}
+y = W * x + b
+```
+
+Agora vamos definir o nosso modelo. Ele é uma classe do python que recebe os valores iniciais dos pesos `w` e `b` na inicialização e possui o método `predict` que
+faz uma transformação linear `w*x + b` no input `x`.
+
+```{python}
+class Model:
+    def __init__(self, w, b):
+        self.w = w
+        self.b = b
+
+    def predict(self, x):
+        return self.w * x + self.b
+```
+
+Agora vamos definir a função de perda. Nesse caso estamos usando o erro quadrático médio:
+
+```{python}
+def loss(y_true, y_hat):
+    return np.mean((y_true - y_hat) ** 2)
+```
+
+Também definimos as derivadas da função de perda `l` em relação a cada uma das partes do grafo de computação até chegar nos parâmetros que queremos estimar.
+
+```{python}
+# derivada da função de perda em relação à y_hat
+def dl_dyhat(y_hat, x, y):
+    return 2 * (y - y_hat) * (-1)
+
+# derivada de y_hat com relação a w
+def dyhat_dw(y_hat, x, y):
+    return x
+
+# derivada de y_hat com relação a b (viés)
+def dyhat_db(y_hat, x, y):
+    return 1.0
+```
+
+Agora vamos inicializar o modelo:
+
+```{python}
+w = np.random.uniform(size=1)
+b = 0.0
+model = Model(w, b)
+```
+
+E podemos, finalmente, implementar o método da descida do gradiente.
+
+```{python}
+lr = 0.1 # learning rate - qual o tamanho do passo que damos em cada iteração.
+for step in range(500):
+    y_hat = model.predict(x)
+    dldyhat = dl_dyhat(y_hat, x, y)
+    model.w -= lr * np.mean(dldyhat * dyhat_dw(y_hat, x, y))
+    model.b -= lr * np.mean(dldyhat * dyhat_db(y_hat, x, y))
+    if (step % 100) == 0:
+        print("step:", step, "loss:", loss(y, y_hat))
+```
+
+Verificamos que o resultado está conforme o esperado. Isto é, `w` e `b` estão
+parecidos com os valores usamos para gerar os dados.
+
+```{python}
+print(model.w)
+print(model.b)
+```
+

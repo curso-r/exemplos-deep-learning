@@ -1,0 +1,68 @@
+---
+title: "Aplicando a LSTM"
+jupyter: python3
+---
+
+Nesse exemplo vamos aplicar a LSTM ao mesmo banco de dados que fizemos o Pooling. Diferentemente do [exemplo](./11-avg-pooling.qmd) vamos prever para todas as tags do banco de dados. **Note** que são tags, não categorias, cada texto pode ser classificado em mais de uma.
+
+```{python}
+from tensorflow import keras
+import pandas as pd
+import seaborn as sns
+import numpy as np
+```
+
+Vamos carregar o banco de dados:
+
+```{python}
+dataset = pd.read_csv(
+    "https://storage.googleapis.com/deep-learning-com-r/toxic-comments.csv"
+)
+dataset.head()
+```
+
+Nosso objetivo será, a partir do texto do comentário, classificar nas diversas tags possíveis.
+
+```{python}
+x = dataset['comment_text'].to_numpy()
+y = dataset.iloc[:,2:].to_numpy()
+print(dataset.columns[2:])
+```
+
+Vamos então criar a camada de vetorização e adaptá-la:
+
+```{python}
+vectorize = keras.layers.TextVectorization(
+    max_tokens=10000, output_mode="int", output_sequence_length=150
+)
+
+vectorize.adapt(x)
+vocab = vectorize.get_vocabulary()
+```
+
+Em seguida podemos criar o modelo no Keras:
+
+```{python}
+input = keras.layers.Input(shape=(), dtype="string")
+output = vectorize(input)
+output = keras.layers.Embedding(input_dim=len(vocab), output_dim=2)(output)
+output = keras.layers.LSTM(units=256)(output)
+output = keras.layers.Dense(units=y.shape[1], activation="sigmoid")(output)
+
+model = keras.Model(inputs=input, outputs=output)
+model.summary()
+```
+
+Note que na última camada densa temos `units=y.shape[1]`, isto é, um output para cada tag possível. A ativação é sigmoid, pois queremos prever uma probabilidade para cada coluna.
+
+Agora vamos compilar e ajustar o modelo;
+
+```{python}
+#| layout-ncol: 1
+#| column: screen-right
+auc = keras.metrics.AUC(curve="ROC")
+
+model.compile(loss="binary_crossentropy", optimizer="sgd", metrics=["accuracy", auc])
+
+model.fit(x, y, epochs=5, batch_size=32, validation_split=0.2, verbose=2)
+```

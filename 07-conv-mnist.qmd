@@ -1,0 +1,144 @@
+---
+title: "MNIST"
+jupyter: python3
+---
+
+Falamos um pouco do MNIST no [exemplo 6](./06-convolution.html) e neste exemplo
+vamos ajustar uma rede neural convolucional para prever os dígitios do MNIST.
+
+```{python}
+from tensorflow import keras
+import numpy as np
+from sklearn import metrics
+import matplotlib.pyplot as plt
+```
+
+O banco de dados do MNIST pode ser obtido usando funções prontas do Keras.
+
+```{python}
+(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+```
+
+Agora podemos visualizar algumas imagens do banco de dados:
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 3
+plt.imshow(x_train[0])
+plt.show()
+plt.imshow(x_train[1])
+plt.show()
+plt.imshow(x_train[2])
+plt.show()
+```
+
+Os vetores `y_train` e `y_test` possuem o valor representado pelo dígito que
+está na imagem.
+
+```{python}
+print(y_train[0:3])
+```
+
+Note que as imagens do MNIST são tamanho 28x28x1 (o 1 vem do núemro de canais - como a 
+imagem é P&B só temos 1 canal.)
+
+```{python}
+x_train.shape
+```
+
+Agora vamos definir o modelo. Ponto importantes:
+
+1. O input do modelo tem formato 28x28x1. Isso é a altura e largura das imagens
+do input é 28 e a imagem é P&B, 1 canal.
+2. As imagens estão representadas por número inteiros de 0 a 255, é importante
+fazer o *rescaling*  e transformar esses valores em números entre 0 e 1, para não
+termos problemas com o algoritmo de otimização.
+3. Estamos usando 4 blocos de convolução/ pooling. Em cada um deles aumentamos o
+número de filtros da convolução e o 'pooling' será reponsável por diminuir o
+tamanho da imagem.
+4. O `Flatten` tira as dimensões que não estão sendo usadas e transforma o output
+em um **vetor**.
+5. No final colocamos um MLP. Note que o número de outputs da última camada é 10,
+pois temos 10 classes possíveis (dígitos de 0 a 9). A ativação é softmax pois 
+cada imagem pertence a uma única classe. Portanto as probabilidades por linha devem
+somar 1.
+
+```{python}
+input = keras.layers.Input(shape=(28, 28, 1))
+output = keras.layers.Rescaling(1.0/255.0)(input)
+
+output = keras.layers.Conv2D(
+    kernel_size=(3, 3), filters=32, activation="relu", padding="same"
+)(output)
+output = keras.layers.MaxPool2D(pool_size=(2, 2))(output)
+
+output = keras.layers.Conv2D(
+    kernel_size=(3, 3), filters=64, activation="relu", padding="same"
+)(output)
+output = keras.layers.MaxPool2D(pool_size=(2, 2))(output)
+
+output = keras.layers.Conv2D(
+    kernel_size=(3, 3), filters=128, activation="relu", padding="same"
+)(output)
+output = keras.layers.MaxPool2D(pool_size=(2, 2))(output)
+
+output = keras.layers.Conv2D(
+    kernel_size=(3, 3), filters=256, activation="relu", padding="same"
+)(output)
+output = keras.layers.MaxPool2D(pool_size=(2, 2))(output)
+
+output = keras.layers.Flatten()(output)
+output = keras.layers.Dense(128, activation="relu")(output)
+output = keras.layers.Dense(10, activation="softmax")(output)
+```
+
+Agora criamos o modelo do Keras
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 1
+model = keras.Model(inputs=input, outputs=output)
+model.summary()
+```
+
+Veja o número de parâmetros da primeira camada de convolução. Você pode pensar da seguinte forma:
+
+1. Cada kernel tem 3x3 parâmetros.
+2. Cada filtro tem 1 kernel.
+3. Cada filtro possui um viés.
+4. Total: 3x3x32 + 32
+
+Para a segunda camada a conta é a mesma, mas o input agora não possui apenas um canal. 
+Agora o input possui 32 canais então pensamos:
+
+1. Cada kernel tem 3x3x32 parâmetros.
+2. Cada filtro tem 1 kernel.
+3. Cada filtro possui um viés.
+4. Total: 3x3x32x64 + 64
+
+Agora podemos compilar o modelo.
+Usamos a 'sparse_categorical_crossentropy' pois o problema de classificação em muitas classes.
+O `sparse` é usado para não precisar transformar o vetor de resposta `y_train` em uma
+matriz com one-hot encode.
+
+```{python}
+model.compile(loss="sparse_categorical_crossentropy", optimizer="sgd", metrics=["accuracy"])
+```
+
+Então, podemos ajustar o modelo:
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 1
+model.fit(x_train, y_train, batch_size=32, epochs=5, validation_split=0.2,
+          verbose=2)
+```
+
+Vamos também verificar a matriz de confusão para a base de teste. Note que para 
+encontrar a classe predita, pegamos a classe com maior probabilidade.
+
+```{python}
+metrics.confusion_matrix(
+    y_test, np.argmax(model.predict(x_test), axis=1)
+)
+```

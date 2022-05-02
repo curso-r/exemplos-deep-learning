@@ -1,0 +1,123 @@
+---
+title: "SGD"
+jupyter: python3
+---
+
+:::{.callout-note}
+Esse exemplo é muito parecido com o [exemplo 1](./01-linear-regression.html) com apenas modificações no loop de ajuste do modelo para usar o método da descida do gradiente estocástico - *stochastic gradient descent* ou também **SGD**.
+:::
+
+O objetivo desse exemplo é simular alguns dados e ajustar um modelo
+de regressão linear usando o método **estocástico** da descida do gradiente.
+Importante notar que queremos implementar o método da descida do gradiente de forma manual, isto é, sem usar bibliotecas que calculam 
+a derivada automaticamente.
+
+:::{.callout-note}
+A vantagem do SGD com relação ao GD é o custom computacional. O primeiro precisa
+calcular derivadas de todas as observações, calcular o valor predito para todas as
+observações, etc para cada passo. No **SGD**, como fazemos uma observação de cada vez,
+chegamos mais rápido no mínimo.
+
+Outra vantagem é o uso da memória. Em deep learning muitas vezes não conseguimos
+carregar todos os dados de uma vez para a memória do computador. No caso do SGD,
+é trivial implementá-lo sem precisar de todas as observações de uma vez.
+
+Além disso, é estudado que o SGD tem um efeito de regularização no ajuste do modelo.
+:::
+
+```{python}
+import numpy as np
+```
+
+Em primeiro lugar simulamos alguns dados. `x` vai ser uma variável contendo `n` valores aleatórios obtidos a partir da distribuição uniforme.
+
+```{python}
+n = 1000
+x = np.random.uniform(size=(n,))
+```
+
+Em seguida definimos os pesos `W` e `b` para a simulação. Nosso objetivo depois, vai ser *fingir* que não sabemos esses valores e ajustar um modelo para encontrá-los.
+
+```{python}
+W = 0.9
+b = 0.1
+```
+
+Definimos então a variável resposta:
+
+```{python}
+y = W * x + b
+```
+
+Agora vamos definir o nosso modelo. Ele é uma classe do python que recebe os valores iniciais dos pesos `w` e `b` na inicialização e possui o método `predict` que
+faz uma transformação linear `w*x + b` no input `x`.
+
+```{python}
+class Model:
+    def __init__(self, w, b):
+        self.w = w
+        self.b = b
+
+    def predict(self, x):
+        return self.w * x + self.b
+```
+
+Agora vamos definir a função de perda. Nesse caso estamos usando o erro quadrático médio:
+
+```{python}
+def loss(y_true, y_hat):
+    return np.mean((y_true - y_hat) ** 2)
+```
+
+Também definimos as derivadas da função de perda `l` em relação a cada uma das partes do grafo de computação até chegar nos parâmetros que queremos estimar.
+
+```{python}
+# derivada da função de perda em relação à y_hat
+def dl_dyhat(y_hat, x, y):
+    return 2 * (y - y_hat) * (-1)
+
+# derivada de y_hat com relação a w
+def dyhat_dw(y_hat, x, y):
+    return x
+
+# derivada de y_hat com relação a b (viés)
+def dyhat_db(y_hat, x, y):
+    return 1.0
+```
+
+Agora vamos inicializar o modelo:
+
+```{python}
+w = np.random.uniform(size=1)
+b = 0.0
+model = Model(w, b)
+```
+
+E podemos, finalmente, implementar o método da descida do gradiente.
+
+```{python}
+lr = 0.1 # learning rate - qual o tamanho do passo que damos em cada iteração.
+num_epochs = 2 # o número de épocas é o número de vezes que passamos pela base inteira.
+index = np.arange(x.size)
+
+for epoch in range(num_epochs):
+    np.random.shuffle(index)
+    for i in list(index):
+        y_hat = model.predict(x[i])
+        model.w -= lr * np.mean(
+            dl_dyhat(y_hat, x[i], y[i]) * dyhat_dw(y_hat, x[i], y[i])
+        )
+        model.b -= lr * np.mean(
+            dl_dyhat(y_hat, x[i], y[i]) * dyhat_db(y_hat, x[i], y[i])
+        )
+    print("epoch:", epoch, "loss:", loss(y, model.predict(x)))
+```
+
+Verificamos que o resultado está conforme o esperado. Isto é, `w` e `b` estão
+parecidos com os valores usamos para gerar os dados.
+
+```{python}
+print(model.w)
+print(model.b)
+```
+

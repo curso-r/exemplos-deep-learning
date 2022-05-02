@@ -1,0 +1,120 @@
+---
+title: "Convolução"
+jupyter: python3
+---
+
+Nesse exemplo vamos mostrar o que acontece por trás dos panos quando fazemos
+uma convolução no Keras.
+
+```{python}
+from tensorflow import keras
+import numpy as np
+import matplotlib.pyplot as plt
+```
+
+Começamos pegando uma imagem do banco de dados MNIST - famoso banco de dados
+de exemplos de deep learning que contém imagens de dígitos de 0 a 9 escritos à 
+mão.
+
+```{python}
+(x_train, _), (_, _) = keras.datasets.mnist.load_data()
+```
+
+Podemos visualizar algumas imagens com:
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 3
+plt.imshow(x_train[0])
+plt.show()
+plt.imshow(x_train[1])
+plt.show()
+plt.imshow(x_train[2])
+plt.show()
+```
+
+Cada imagem é representada por uma matrix 28x28 em que os valores são a intensidade
+de cor. Os valores vão de 0 a 255.
+
+Agora vamos definir um kernel de convolução de tamanho 3x3.
+
+```{python}
+w = np.random.uniform(size=(3, 3))
+w = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
+```
+
+Lembre-se que na convolução vamos, para cada pixel da imagem, vamos posicionar esse
+kernel e fazer a multiplicação entre ele e os vizinhos para poder somar.
+
+Primeiro vamos definir uma forma de encontrar os vizinhos. Dado um pixel na linha 9
+e coluna doze da imagem, podemos obter os vizinhos da seguinte forma:
+
+```{python}
+img = x_train[0, :, :] / 255.0
+# vizinhança de tamanho 3x3
+i = 9
+j = 12
+
+vizinhos = img[(i - 1) : (i + 2), (j - 1) : (j + 2)]
+```
+
+Agora como sabemos como encontrar os vizinhos, vamos passear por todos os vizinhos
+para aplicar o algoritmo da convolução:
+
+```{python}
+new_img = img
+for i in range(1, img.shape[0] - 1):
+    for j in range(1, img.shape[1] - 1):
+        vizinhos = img[(i - 1) : (i + 2), (j - 1) : (j + 2)]
+        # multiplica pelo kernel e soma para gerar o novo valor
+        new_img[i, j] = np.sum(w * vizinhos)
+
+new_img = new_img[1:-1, 1:-1]
+```
+
+A imagem gerada depois da convolução foi:
+
+```{python}
+plt.imshow(new_img)
+```
+
+O Keras faz exatamente isso que o loop acima está fazendo quando usamos a camada
+Conv2D. Vamos reproduzir a mesma imagem, agora usando o Keras. Pontos importantes:
+
+1. O kernel para o Keras é um tensor com 4 dimensões: altura e largura do kernel,
+número de canais no input e número de filtros. Por isso tivemos que fazer o `reshape`.
+2. É recomendado usar ativações na convolução. Nesse exemplo não estamos usando para
+poder reproduzir o código acima.
+3. Existem diversas formas de padding. `padding='valid'` significa que não estamos
+fazendo padding, ou seja, só vamos passar pelos pixels que possuem todos os vizinhos.
+4. O parâmetro `weights` das camadas do Keras permite que você especifique os parâmetros
+iniciais manualmente.
+5. Desativamos o viés também para simplificar o loop acima.
+
+```{python}
+w2 = np.reshape(w, (3, 3, 1, 1)) # o Kernel para o keras é uma array com 4 dimensões
+conv = keras.layers.Conv2D(
+    filters=1,
+    kernel_size=(3, 3),
+    activation="linear",
+    padding="valid",
+    weights=[w2],
+    use_bias=False,
+)
+```
+
+Agora aplicamos essa cada na imagem.
+
+```{python}
+# o Keras espera imagens no formato (nobs, altura, largura, canais)
+im = np.reshape(img, (1, 28, 28, 1)) 
+out = conv(im)
+```
+
+Você pode comparar a imagem gerada pelo Keras e pelo nosso loop e verificar que são
+idênticas.
+
+```{python}
+plt.imshow(out.numpy()[0, :, :, 0])
+```
+

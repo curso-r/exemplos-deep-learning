@@ -1,0 +1,83 @@
+---
+title: "Modelo pré-treinado"
+jupyter: python3
+---
+
+Nesse exemplo vamos ajustar um modelo pré-treinado para a mesma base usando embeddings provenientes de um tipo de modelo que é bem avançado chamado BERT.
+Para isso vamos usar o tfhub.
+
+```{python}
+from tensorflow import keras
+import tensorflow_text
+import tensorflow_hub as hub
+import pandas as pd
+import numpy as np
+```
+
+A tarefa será bem similar com o que fizemos quando usamos modelos pré treinados
+para imagens.
+
+Em primeiro lugar vamos obter o banco de dados:
+
+```{python}
+dataset = pd.read_csv(
+    "https://storage.googleapis.com/deep-learning-com-r/toxic-comments.csv"
+)
+dataset.head()
+```
+
+Os modelos pré-treinados do tfhub já incluem as suas camadas de pré-processamento, portanto não precisamos nos preocupar em pré-processar
+os textos usando a camada de vetorização. Eles também incluem os embeddings, portanto não vamos criar essas camadas. Muitos dos modelos também retornam embeddings completas para os textos, não apenas para as palavras. 
+
+```{python}
+x = dataset["comment_text"].to_numpy()
+y = dataset.iloc[:, 2:].to_numpy()
+```
+
+Vamos definir o modelo no Keras:
+
+```{python}
+#| eval: false
+input = keras.layers.Input(shape=(), dtype="string")
+encoded = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_multi_cased_preprocess/3")(
+    input
+)
+encoded = hub.KerasLayer(
+    "https://tfhub.dev/tensorflow/bert_multi_cased_L-12_H-768_A-12/4", trainable=False
+)(encoded)
+
+output = keras.layers.Dense(units=y.shape[1], activation="sigmoid")(encoded["default"])
+```
+
+O modelo pode ser definido com:
+
+```{python}
+#| eval: false
+model = keras.Model(inputs=input, outputs=output)
+```
+
+Agora podemos ajustar o modelo. Basicamente só estamos ajustando classificador que se baseia nas embeddings criadas pelo BERT.
+
+```{python}
+#| layout-ncol: 1
+#| column: screen-right
+#| eval: false
+auc = keras.metrics.AUC(curve="ROC")
+
+model.compile(loss="binary_crossentropy", optimizer="sgd", metrics=["accuracy", auc])
+
+model.fit(x, y, epochs=1, batch_size=32, validation_split=0.2, verbose=1)
+```
+```
+#| layout-ncol: 1
+#| column: screen-right
+3990/3990 [==============================] - 1181s 295ms/step - loss: 0.1078 - accuracy: 0.9733 - auc: 0.8957 - val_loss: 0.0969 - val_accuracy: 0.9146 - val_auc: 0.9244
+```
+
+O modelo demora para rodar. Mas em apenas uma época conseguimos um bom resultado.
+
+
+
+
+
+
