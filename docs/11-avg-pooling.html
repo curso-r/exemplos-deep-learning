@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-0.9.314">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Exemplos Deep Learning - Pooling</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link id="quarto-text-highlighting-styles" href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="docked fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Pooling</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Exemplos Deep Learning</a> 
+    </div>
+      </div>
+      <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+    <div class="sidebar-item-container"> 
+        <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">Fundamentos</a>
+      <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+        <i class="bi bi-chevron-right ms-2"></i>
+      </a>
+    </div>
+    <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-linear-regression.html" class="sidebar-item-text sidebar-link">Regressão Linear</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-sgd.html" class="sidebar-item-text sidebar-link">SGD</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-keras.html" class="sidebar-item-text sidebar-link">Keras</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-mlp.html" class="sidebar-item-text sidebar-link">Multi-Layer Perceptron</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-logistic-regression.html" class="sidebar-item-text sidebar-link">Regressão Logística</a>
+  </div>
+</li>
+    </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+    <div class="sidebar-item-container"> 
+        <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">Visão computacional</a>
+      <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+        <i class="bi bi-chevron-right ms-2"></i>
+      </a>
+    </div>
+    <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-convolution.html" class="sidebar-item-text sidebar-link">Convolução</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-conv-mnist.html" class="sidebar-item-text sidebar-link">MNIST</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-tfhub.html" class="sidebar-item-text sidebar-link">Modelos pré-treinados</a>
+  </div>
+</li>
+    </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+    <div class="sidebar-item-container"> 
+        <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">NLP</a>
+      <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
+        <i class="bi bi-chevron-right ms-2"></i>
+      </a>
+    </div>
+    <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-text-vectorization.html" class="sidebar-item-text sidebar-link">Pré-processamento</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-embedding.html" class="sidebar-item-text sidebar-link">Word embeddings</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-avg-pooling.html" class="sidebar-item-text sidebar-link active">Pooling</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-simple-rnn.html" class="sidebar-item-text sidebar-link">RNN’s</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-simple-lstm.html" class="sidebar-item-text sidebar-link">LSTM’s</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-lstm.html" class="sidebar-item-text sidebar-link">Aplicando a LSTM</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-nlp-tfhub.html" class="sidebar-item-text sidebar-link">Modelo pré-treinado</a>
+  </div>
+</li>
+    </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+    <div class="sidebar-item-container"> 
+        <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true">Misc</a>
+      <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true">
+        <i class="bi bi-chevron-right ms-2"></i>
+      </a>
+    </div>
+    <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-quora.html" class="sidebar-item-text sidebar-link">Quora</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-enem.html" class="sidebar-item-text sidebar-link">Enem</a>
+  </div>
+</li>
+    </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Pooling</h1>
+</div>
+
+
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<p>Nesse exemplo vamos usar as camadas de TextVectorization do <a href="./09-text-vectorization.html">exemplo 09</a> e a camada de embedding do <a href="./10-embedding.html">exemplo anterior</a> para transformar cada palavra em um vetor com 1 elemento.</p>
+<p>Em seguida vamos considerar que cada texto (no caso do banco de dados, comentários feiros em forum da internet) pode ser representado pela média das palavras que têm nele. Usar a média é também chamado de <code>GlobalAveragePooling</code> no Keras:</p>
+<div class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow <span class="im">import</span> keras</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Vamos carregar o banco de dados:</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> pd.read_csv(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://storage.googleapis.com/deep-learning-com-r/toxic-comments.csv"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>dataset.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>id</th>
+      <th>comment_text</th>
+      <th>toxic</th>
+      <th>severe_toxic</th>
+      <th>obscene</th>
+      <th>threat</th>
+      <th>insult</th>
+      <th>identity_hate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0000997932d777bf</td>
+      <td>Explanation\nWhy the edits made under my usern...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>000103f0d9cfb60f</td>
+      <td>D'aww! He matches this background colour I'm s...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>000113f07ec002fd</td>
+      <td>Hey man, I'm really not trying to edit war. It...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0001b41b1c6bb37e</td>
+      <td>"\nMore\nI can't make any real suggestions on ...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0001d958c54c6e35</td>
+      <td>You, sir, are my hero. Any chance you remember...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Nosso objetivo será, a partir do texto do comentário, classificar em tóxico ou não tóxico.</p>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> dataset[<span class="st">'comment_text'</span>].to_numpy()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> dataset.iloc[:,<span class="dv">2</span>].to_numpy()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Para escolher o valor de <code>output_sequence_length</code>, isto é, o número máximo de palavras em cada texto, fazemos um histograma do número de palavras por texto:</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>numero_palavras <span class="op">=</span> [<span class="bu">len</span>(i.split()) <span class="cf">for</span> i <span class="kw">in</span> x]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sns.histplot(numero_palavras)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<pre><code>&lt;AxesSubplot:ylabel='Count'&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="11-avg-pooling_files/figure-html/cell-5-output-2.png" width="602" height="404"></p>
+</div>
+</div>
+<p>Como a maioria dos textos possui menos do que 150 palavras, escolhemos que o tamanho máximo é 150. Dessa forma, se um texto for muito grande, usamos apenas as primeiras 150 palavras para classificar em tóxico/não tóxico. Isso vai permitir que o modelo fique muito mais rápido.</p>
+<p>Vamos então criar a camada de vetorização e adaptá-la:</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>vectorize <span class="op">=</span> keras.layers.TextVectorization(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    max_tokens<span class="op">=</span><span class="dv">10000</span>, output_mode<span class="op">=</span><span class="st">"int"</span>, output_sequence_length<span class="op">=</span><span class="dv">150</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>vectorize.adapt(x)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>vocab <span class="op">=</span> vectorize.get_vocabulary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Agora vamos definir o modelo. Lembre que cada palavra será representada por um vetor pela camada de embedding e queremos que a média desses valores represente a probabilidade do texto ser tóxicou ou não.</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">input</span> <span class="op">=</span> keras.layers.Input(shape<span class="op">=</span>(), dtype<span class="op">=</span><span class="st">"string"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> vectorize(<span class="bu">input</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.Embedding(input_dim<span class="op">=</span><span class="bu">len</span>(vocab), output_dim<span class="op">=</span><span class="dv">1</span>)(output)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.GlobalAveragePooling1D()(output)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.Activation(<span class="st">"sigmoid"</span>)(output)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> keras.Model(inputs<span class="op">=</span><span class="bu">input</span>, outputs<span class="op">=</span>output)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>model.summary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Model: "model_1"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>_________________________________________________________________</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Layer (type)                Output Shape              Param #   </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=================================================================</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> input_2 (InputLayer)        [(None,)]                 0         </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> text_vectorization_1 (TextV  (None, 150)              0         </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> ectorization)                                                   </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> embedding_1 (Embedding)     (None, 150, 1)            10000     </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> global_average_pooling1d_1   (None, 1)                0         </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> (GlobalAveragePooling1D)                                        </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code> activation_1 (Activation)   (None, 1)                 0         </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=================================================================</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total params: 10,000</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Trainable params: 10,000</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Non-trainable params: 0</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>_________________________________________________________________</code></pre>
+</div>
+</div>
+<p>Nesse modelo, o número de parâmetros é igual ao número de palavras que temos no vocabulário.</p>
+<p>Agora podemos compilar o modelo. Vamos usar a ‘binary_crossentropy’ pois o problema é de classificação binária. Além da acurácia, vamos medir o AUC, uma vez que o problema é bem desbalanceado (muitos zeros e poucos uns).</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>auc <span class="op">=</span> keras.metrics.AUC(curve<span class="op">=</span><span class="st">"ROC"</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">compile</span>(loss<span class="op">=</span><span class="st">"binary_crossentropy"</span>, optimizer<span class="op">=</span><span class="st">"adam"</span>, metrics<span class="op">=</span>[<span class="st">"accuracy"</span>, auc])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Agora vamos ajustar o modelo:</p>
+<div class="page-columns page-full">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>model.fit(x, y, epochs<span class="op">=</span><span class="dv">5</span>, batch_size<span class="op">=</span><span class="dv">32</span>, validation_split<span class="op">=</span><span class="fl">0.2</span>, verbose<span class="op">=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell column-screen-right quarto-layout-panel" data-execution_count="8">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>Epoch 1/5</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>3990/3990 - 6s - loss: 0.4087 - accuracy: 0.9041 - auc_1: 0.5017 - val_loss: 0.3155 - val_accuracy: 0.9051 - val_auc_1: 0.5966 - 6s/epoch - 1ms/step</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>Epoch 2/5</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>3990/3990 - 5s - loss: 0.3060 - accuracy: 0.9044 - auc_1: 0.7704 - val_loss: 0.2966 - val_accuracy: 0.9053 - val_auc_1: 0.8276 - 5s/epoch - 1ms/step</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>Epoch 3/5</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>3990/3990 - 6s - loss: 0.2939 - accuracy: 0.9045 - auc_1: 0.8131 - val_loss: 0.2884 - val_accuracy: 0.9055 - val_auc_1: 0.8167 - 6s/epoch - 1ms/step</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>Epoch 4/5</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>3990/3990 - 6s - loss: 0.2871 - accuracy: 0.9047 - auc_1: 0.8222 - val_loss: 0.2826 - val_accuracy: 0.9057 - val_auc_1: 0.8313 - 6s/epoch - 2ms/step</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>Epoch 5/5</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>3990/3990 - 7s - loss: 0.2816 - accuracy: 0.9049 - auc_1: 0.8385 - val_loss: 0.2776 - val_accuracy: 0.9058 - val_auc_1: 0.8462 - 7s/epoch - 2ms/step</code></pre>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell" data-execution_count="19" style="flex-basis: 100.0%;justify-content: center;">
+<pre><code>&lt;keras.callbacks.History at 0x7f9c47499e50&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<p>Podemos indetificar as palavras com os maiores e menores valores de embedding. Como o texto é classificado em tóxico/não tóxico com base na média dos valores das palavras dele, palavras com valores altos ajudam a classificar o texto como tóxico e palavras com valores baixos ajudam a considerar o texto como não tóxico.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> model.get_weights()[<span class="dv">1</span>]</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>words <span class="op">=</span> pd.DataFrame.from_dict({</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"word"</span>: vocab,</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"embedding"</span>: embeddings[:,<span class="dv">0</span>]</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As 10 palavras com maires valores de embeddings são:</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>words.sort_values(<span class="st">"embedding"</span>, ascending <span class="op">=</span> <span class="va">False</span>).head(<span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>word</th>
+      <th>embedding</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>382</th>
+      <td>fucking</td>
+      <td>8.187375</td>
+    </tr>
+    <tr>
+      <th>139</th>
+      <td>fuck</td>
+      <td>7.190009</td>
+    </tr>
+    <tr>
+      <th>563</th>
+      <td>stupid</td>
+      <td>6.245700</td>
+    </tr>
+    <tr>
+      <th>318</th>
+      <td>shit</td>
+      <td>5.337469</td>
+    </tr>
+    <tr>
+      <th>1190</th>
+      <td>idiot</td>
+      <td>5.320159</td>
+    </tr>
+    <tr>
+      <th>762</th>
+      <td>bitch</td>
+      <td>5.001073</td>
+    </tr>
+    <tr>
+      <th>741</th>
+      <td>hell</td>
+      <td>4.981386</td>
+    </tr>
+    <tr>
+      <th>224</th>
+      <td>off</td>
+      <td>4.903869</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>you</td>
+      <td>4.426858</td>
+    </tr>
+    <tr>
+      <th>306</th>
+      <td>life</td>
+      <td>4.257237</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<p>E as 10 palavras com menores valores são:</p>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>words.sort_values(<span class="st">"embedding"</span>, ascending <span class="op">=</span> <span class="va">True</span>).head(<span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>word</th>
+      <th>embedding</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>24</th>
+      <td>article</td>
+      <td>-9.915396</td>
+    </tr>
+    <tr>
+      <th>124</th>
+      <td>thank</td>
+      <td>-9.775599</td>
+    </tr>
+    <tr>
+      <th>46</th>
+      <td>please</td>
+      <td>-9.449037</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>the</td>
+      <td>-9.399350</td>
+    </tr>
+    <tr>
+      <th>86</th>
+      <td>may</td>
+      <td>-8.358996</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>for</td>
+      <td>-8.049402</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>as</td>
+      <td>-7.831261</td>
+    </tr>
+    <tr>
+      <th>191</th>
+      <td>welcome</td>
+      <td>-7.755289</td>
+    </tr>
+    <tr>
+      <th>94</th>
+      <td>thanks</td>
+      <td>-7.719523</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>be</td>
+      <td>-7.713208</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Vemos que os embeddings que são comportaram como imaginávamos. Maiores valores indicam palavras que levam à textos tóxicos e valores menores levam a textos não tóxicos.</p>
+
+
+
+</main> <!-- /main -->
+<script type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
