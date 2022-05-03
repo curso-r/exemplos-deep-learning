@@ -5,10 +5,10 @@ execute:
 jupyter: python3
 ---
 
-Nesse exemplo vamos fazer um modelo para classificar as perguntas do ENEM eu seus
-respectivos temas.
+Nesse exemplo vamos fazer um modelo para classificar as perguntas do ENEM eu seus respectivos temas.
 
 ```{python}
+#| eval: true
 import pandas as pd
 from tensorflow import keras
 ```
@@ -16,13 +16,15 @@ from tensorflow import keras
 Carregando os dados:
 
 ```{python}
-df = pd.read_csv("https://storage.googleapis.com/deep-learning-com-r/banco_de_questoes.csv",encoding = 'latin2', sep = ";")]
+#| eval: true
+df = pd.read_csv("https://storage.googleapis.com/deep-learning-com-r/banco_de_questoes.csv",encoding = 'latin2', sep = ";")
 df
 ```
 
 Vamos separar a resposta e dados de treino
 
 ```{python}
+#| eval: true
 df.grande_tema.value_counts()
 y = df.grande_tema.astype('category').cat.codes.astype("int32").to_numpy()
 x = df.enunciados.astype("str").to_numpy()
@@ -31,6 +33,7 @@ x = df.enunciados.astype("str").to_numpy()
 Agora vamos criar a camada de vetorização:
 
 ```{python}
+#| eval: true
 vectorize = keras.layers.TextVectorization(
   max_tokens = 10000,
   pad_to_max_tokens=True
@@ -42,6 +45,7 @@ vocab = vectorize.get_vocabulary()
 Então podemos definir o modelo
 
 ```{python}
+#| eval: true
 input = keras.layers.Input(shape=(), dtype="string")
 output = vectorize(input)
 output = keras.layers.Embedding(input_dim=len(vocab), output_dim=256)(output)
@@ -53,6 +57,7 @@ output = keras.layers.Dense(units=y.max() + 1, activation="softmax")(output)
 Compilar e ajustar
 
 ```{python}
+#| eval: true
 model = keras.Model(inputs=input, outputs=output)
 auc = keras.metrics.AUC(curve="ROC")
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=[auc, "accuracy"])
@@ -60,11 +65,13 @@ model.summary()
 ```
 
 ```{python}
+#| eval: true
+#| layout-ncol: 1
+#| column: screen-right
 model.fit(
   x=x, 
-  y=keras.utils.to_categorical(y)
+  y=keras.utils.to_categorical(y),
+  epochs = 1,
+  verbose = 2
 )
 ```
-
-
-

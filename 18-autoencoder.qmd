@@ -1,0 +1,146 @@
+---
+title: "Autoencoder"
+jupyter: python3
+---
+
+Nesse exemplo vamos ajustar um autoencoder com autoencoder na base do MNIST.
+Vamos também mostrar alguns dos possíveis usos do Autoencoder.
+
+```{python}
+from tensorflow import keras
+import numpy as np
+import matplotlib.pyplot as plt
+```
+
+Vamos obter o banco de dados:
+
+```{python}
+(x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
+```
+
+Podemos visualizar algumas imagens com:
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 3
+plt.imshow(x_train[0])
+plt.show()
+plt.imshow(x_train[1])
+plt.show()
+plt.imshow(x_train[2])
+plt.show()
+```
+
+Agora vamos definir o modelo. Nesse exemplo vamos usar uma forma um pouco diferente
+de definir o modelo que é usando classes. Dessa forma, podemos encapsular um pouco
+melhor o código. Também usaremos a `keras.Sequential` pela primeira vez, por isso
+vamos entender o que ele faz.
+
+Os 3 modelos definidos a seguir são equivalentes:
+
+```{python}
+# Usando a API funcional
+input = keras.layers.Input(shape=(28,28,1))
+output = keras.layers.Flatten()(input)
+output = keras.layers.Dense(units=64, activation="relu")(output)
+model = keras.Model(inputs=input, outputs=output)
+
+# Usando a API sequencial
+model = keras.Sequential([
+  keras.layers.Flatten(),
+  keras.layers.Dense(units=64, activation='relu'),
+])
+
+# usando a API de classes
+class Modelo(keras.Model):
+  def __init__(self):
+    super(Modelo, self).__init__()
+    self.flatten = keras.layers.Flatten()
+    self.dense = keras.layers.Dense(units=64, activation="relu")
+  def call(self, x):
+    out = self.flattent(x)
+    return self.dense(out)
+```
+
+A vantagem da API sequencial do Keras é ser menos verbosa. No entanto, didaticamente
+a API funcional é mais clara, pois ela nos força a pensar em qual é o nosso input
+e como as camadas são combinadas. Já a API de classes é útil para modelos mais
+complicados pois permite que possamos encapsular melhor os códigos.
+**Note** que podemos misturar todas as API's no mesmo código e isso é considerado idiomático.
+
+
+Agora vamos definir o autoencoder. Definimos ele em duas partes:
+
+- Um encoder, que transforma a imagem do MNIST em um vetor.
+- Um decoder, que pega um vetor e transforma de volta em uma imagem.
+
+```{python}
+class Autoencoder(keras.Model):
+  def __init__(self, latent_dim):
+    super(Autoencoder, self).__init__()
+    self.latent_dim = latent_dim   
+    self.encoder = keras.Sequential([
+      keras.layers.Rescaling(scale=1./255),
+      keras.layers.Flatten(),
+      keras.layers.Dense(latent_dim, activation='relu'),
+    ])
+    self.decoder = keras.Sequential([
+      keras.layers.Dense(784, activation='sigmoid'),
+      keras.layers.Reshape((28, 28, 1)),
+      keras.layers.Rescaling(scale=255.)
+    ])
+  def call(self, x):
+    encoded = self.encoder(x)
+    decoded = self.decoder(encoded)
+    return decoded
+```
+
+Para incializar um modelo definido como uma classe usamos:
+
+```{python}
+autoencoder = Autoencoder(latent_dim=64)
+```
+
+Então podemos compilar:
+
+```{python}
+autoencoder.compile(optimizer='adam', loss=keras.losses.MeanSquaredError())
+```
+
+E ajustar:
+
+```{python}
+autoencoder.fit(x_train, x_train,
+  epochs=10,
+  shuffle=True,
+  validation_data=(x_test, x_test),
+  verbose=2
+  )
+```
+
+Podemos usar o autoencoder para simplificar e depois reconstruir uma imagem:
+
+```{python}
+encoded = autoencoder.encoder.predict(x_test)
+decoded = autoencoder.decoder.predict(encoded)
+```
+
+O 'encoder' do nosso autoencoder representa cada imagem como um vetor e esse vetor
+pode ser usado para comparar imagens, ou para ser input de algum outro modelo.
+
+```{python}
+encoded[0]
+```
+
+Visualize a imagem antes e depois:
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 2
+plt.imshow(x_test[0])
+plt.show()
+plt.imshow(decoded[0].astype("uint8"))
+plt.show()
+```
+
+

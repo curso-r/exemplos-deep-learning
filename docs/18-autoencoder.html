@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Exemplos Deep Learning - Convolução</title>
+<title>Exemplos Deep Learning - Autoencoder</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -126,7 +126,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <header id="quarto-header" class="headroom fixed-top">
   <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
     <div class="container-fluid d-flex justify-content-between">
-      <h1 class="quarto-secondary-nav-title">Convolução</h1>
+      <h1 class="quarto-secondary-nav-title">Autoencoder</h1>
       <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
         <i class="bi bi-chevron-right"></i>
       </button>
@@ -194,7 +194,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./06-convolution.html" class="sidebar-item-text sidebar-link active">Convolução</a>
+  <a href="./06-convolution.html" class="sidebar-item-text sidebar-link">Convolução</a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -274,7 +274,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./18-autoencoder.html" class="sidebar-item-text sidebar-link">Autoencoder</a>
+  <a href="./18-autoencoder.html" class="sidebar-item-text sidebar-link active">Autoencoder</a>
   </div>
 </li>
     </ul>
@@ -289,7 +289,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">Convolução</h1>
+<h1 class="title d-none d-lg-block">Autoencoder</h1>
 </div>
 
 
@@ -305,15 +305,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p>Nesse exemplo vamos mostrar o que acontece por trás dos panos quando fazemos uma convolução no Keras.</p>
+<p>Nesse exemplo vamos ajustar um autoencoder com autoencoder na base do MNIST. Vamos também mostrar alguns dos possíveis usos do Autoencoder.</p>
 <div class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow <span class="im">import</span> keras</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Começamos pegando uma imagem do banco de dados MNIST - famoso banco de dados de exemplos de deep learning que contém imagens de dígitos de 0 a 9 escritos à mão.</p>
+<p>Vamos obter o banco de dados:</p>
 <div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(x_train, _), (_, _) <span class="op">=</span> keras.datasets.mnist.load_data()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(x_train, _), (x_test, _) <span class="op">=</span> keras.datasets.mnist.load_data()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Podemos visualizar algumas imagens com:</p>
 <div class="page-columns page-full">
@@ -326,87 +326,187 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell column-screen-right quarto-layout-panel" data-execution_count="3">
 <div class="quarto-layout-row quarto-layout-valign-top">
 <div class="cell-output cell-output-display quarto-layout-cell" style="flex-basis: 33.3%;justify-content: center;">
-<p><img src="06-convolution_files/figure-html/cell-4-output-1.png" class="img-fluid" width="408"></p>
+<p><img src="18-autoencoder_files/figure-html/cell-4-output-1.png" class="img-fluid" width="408"></p>
 </div>
 <div class="cell-output cell-output-display quarto-layout-cell" style="flex-basis: 33.3%;justify-content: center;">
-<p><img src="06-convolution_files/figure-html/cell-4-output-2.png" class="img-fluid" width="408"></p>
+<p><img src="18-autoencoder_files/figure-html/cell-4-output-2.png" class="img-fluid" width="408"></p>
 </div>
 <div class="cell-output cell-output-display quarto-layout-cell" style="flex-basis: 33.3%;justify-content: center;">
-<p><img src="06-convolution_files/figure-html/cell-4-output-3.png" class="img-fluid" width="408"></p>
+<p><img src="18-autoencoder_files/figure-html/cell-4-output-3.png" class="img-fluid" width="408"></p>
 </div>
 </div>
 </div>
 </div>
-<p>Cada imagem é representada por uma matrix 28x28 em que os valores são a intensidade de cor. Os valores vão de 0 a 255.</p>
-<p>Agora vamos definir um kernel de convolução de tamanho 3x3.</p>
+<p>Agora vamos definir o modelo. Nesse exemplo vamos usar uma forma um pouco diferente de definir o modelo que é usando classes. Dessa forma, podemos encapsular um pouco melhor o código. Também usaremos a <code>keras.Sequential</code> pela primeira vez, por isso vamos entender o que ele faz.</p>
+<p>Os 3 modelos definidos a seguir são equivalentes:</p>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> np.random.uniform(size<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">3</span>))</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> np.array([[<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>], [<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>], [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Usando a API funcional</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">input</span> <span class="op">=</span> keras.layers.Input(shape<span class="op">=</span>(<span class="dv">28</span>,<span class="dv">28</span>,<span class="dv">1</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.Flatten()(<span class="bu">input</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.Dense(units<span class="op">=</span><span class="dv">64</span>, activation<span class="op">=</span><span class="st">"relu"</span>)(output)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> keras.Model(inputs<span class="op">=</span><span class="bu">input</span>, outputs<span class="op">=</span>output)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Usando a API sequencial</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> keras.Sequential([</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  keras.layers.Flatten(),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  keras.layers.Dense(units<span class="op">=</span><span class="dv">64</span>, activation<span class="op">=</span><span class="st">'relu'</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># usando a API de classes</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Modelo(keras.Model):</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>(Modelo, <span class="va">self</span>).<span class="fu">__init__</span>()</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.flatten <span class="op">=</span> keras.layers.Flatten()</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.dense <span class="op">=</span> keras.layers.Dense(units<span class="op">=</span><span class="dv">64</span>, activation<span class="op">=</span><span class="st">"relu"</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> call(<span class="va">self</span>, x):</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> <span class="va">self</span>.flattent(x)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">self</span>.dense(out)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Lembre-se que na convolução vamos, para cada pixel da imagem, vamos posicionar esse kernel e fazer a multiplicação entre ele e os vizinhos para poder somar.</p>
-<p>Primeiro vamos definir uma forma de encontrar os vizinhos. Dado um pixel na linha 9 e coluna doze da imagem, podemos obter os vizinhos da seguinte forma:</p>
+<p>A vantagem da API sequencial do Keras é ser menos verbosa. No entanto, didaticamente a API funcional é mais clara, pois ela nos força a pensar em qual é o nosso input e como as camadas são combinadas. Já a API de classes é útil para modelos mais complicados pois permite que possamos encapsular melhor os códigos. <strong>Note</strong> que podemos misturar todas as API’s no mesmo código e isso é considerado idiomático.</p>
+<p>Agora vamos definir o autoencoder. Definimos ele em duas partes:</p>
+<ul>
+<li>Um encoder, que transforma a imagem do MNIST em um vetor.</li>
+<li>Um decoder, que pega um vetor e transforma de volta em uma imagem.</li>
+</ul>
 <div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>img <span class="op">=</span> x_train[<span class="dv">0</span>, :, :] <span class="op">/</span> <span class="fl">255.0</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># vizinhança de tamanho 3x3</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> <span class="dv">9</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>j <span class="op">=</span> <span class="dv">12</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>vizinhos <span class="op">=</span> img[(i <span class="op">-</span> <span class="dv">1</span>) : (i <span class="op">+</span> <span class="dv">2</span>), (j <span class="op">-</span> <span class="dv">1</span>) : (j <span class="op">+</span> <span class="dv">2</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Autoencoder(keras.Model):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, latent_dim):</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>(Autoencoder, <span class="va">self</span>).<span class="fu">__init__</span>()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.latent_dim <span class="op">=</span> latent_dim   </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.encoder <span class="op">=</span> keras.Sequential([</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      keras.layers.Rescaling(scale<span class="op">=</span><span class="fl">1.</span><span class="op">/</span><span class="dv">255</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      keras.layers.Flatten(),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      keras.layers.Dense(latent_dim, activation<span class="op">=</span><span class="st">'relu'</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.decoder <span class="op">=</span> keras.Sequential([</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      keras.layers.Dense(<span class="dv">784</span>, activation<span class="op">=</span><span class="st">'sigmoid'</span>),</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      keras.layers.Reshape((<span class="dv">28</span>, <span class="dv">28</span>, <span class="dv">1</span>)),</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      keras.layers.Rescaling(scale<span class="op">=</span><span class="fl">255.</span>)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> call(<span class="va">self</span>, x):</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    encoded <span class="op">=</span> <span class="va">self</span>.encoder(x)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    decoded <span class="op">=</span> <span class="va">self</span>.decoder(encoded)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> decoded</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Agora como sabemos como encontrar os vizinhos, vamos passear por todos os vizinhos para aplicar o algoritmo da convolução:</p>
+<p>Para incializar um modelo definido como uma classe usamos:</p>
 <div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>new_img <span class="op">=</span> img</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, img.shape[<span class="dv">0</span>] <span class="op">-</span> <span class="dv">1</span>):</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, img.shape[<span class="dv">1</span>] <span class="op">-</span> <span class="dv">1</span>):</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        vizinhos <span class="op">=</span> img[(i <span class="op">-</span> <span class="dv">1</span>) : (i <span class="op">+</span> <span class="dv">2</span>), (j <span class="op">-</span> <span class="dv">1</span>) : (j <span class="op">+</span> <span class="dv">2</span>)]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="co"># multiplica pelo kernel e soma para gerar o novo valor</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        new_img[i, j] <span class="op">=</span> np.<span class="bu">sum</span>(w <span class="op">*</span> vizinhos)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>new_img <span class="op">=</span> new_img[<span class="dv">1</span>:<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>:<span class="op">-</span><span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>autoencoder <span class="op">=</span> Autoencoder(latent_dim<span class="op">=</span><span class="dv">64</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>A imagem gerada depois da convolução foi:</p>
+<p>Então podemos compilar:</p>
 <div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(new_img)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="17">
-<pre><code>&lt;matplotlib.image.AxesImage at 0x7fb80deebd30&gt;</code></pre>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>autoencoder.<span class="bu">compile</span>(optimizer<span class="op">=</span><span class="st">'adam'</span>, loss<span class="op">=</span>keras.losses.MeanSquaredError())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell-output cell-output-display">
-<p><img src="06-convolution_files/figure-html/cell-8-output-2.png" width="409" height="404"></p>
-</div>
-</div>
-<p>O Keras faz exatamente isso que o loop acima está fazendo quando usamos a camada Conv2D. Vamos reproduzir a mesma imagem, agora usando o Keras. Pontos importantes:</p>
-<ol type="1">
-<li>O kernel para o Keras é um tensor com 4 dimensões: altura e largura do kernel, número de canais no input e número de filtros. Por isso tivemos que fazer o <code>reshape</code>.</li>
-<li>É recomendado usar ativações na convolução. Nesse exemplo não estamos usando para poder reproduzir o código acima.</li>
-<li>Existem diversas formas de padding. <code>padding='valid'</code> significa que não estamos fazendo padding, ou seja, só vamos passar pelos pixels que possuem todos os vizinhos.</li>
-<li>O parâmetro <code>weights</code> das camadas do Keras permite que você especifique os parâmetros iniciais manualmente.</li>
-<li>Desativamos o viés também para simplificar o loop acima.</li>
-</ol>
+<p>E ajustar:</p>
 <div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>w2 <span class="op">=</span> np.reshape(w, (<span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">1</span>)) <span class="co"># o Kernel para o keras é uma array com 4 dimensões</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>conv <span class="op">=</span> keras.layers.Conv2D(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    filters<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    kernel_size<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">3</span>),</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    activation<span class="op">=</span><span class="st">"linear"</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    padding<span class="op">=</span><span class="st">"valid"</span>,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    weights<span class="op">=</span>[w2],</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    use_bias<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>autoencoder.fit(x_train, x_train,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  epochs<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  validation_data<span class="op">=</span>(x_test, x_test),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  verbose<span class="op">=</span><span class="dv">2</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 1/10</code></pre>
 </div>
-<p>Agora aplicamos essa cada na imagem.</p>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 1555.8877 - val_loss: 605.1500 - 2s/epoch - 1ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 2/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 452.4213 - val_loss: 349.3282 - 2s/epoch - 948us/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 3/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 329.5283 - val_loss: 296.8387 - 2s/epoch - 969us/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 4/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 298.9903 - val_loss: 277.7961 - 2s/epoch - 958us/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 5/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 286.0212 - val_loss: 278.3241 - 2s/epoch - 943us/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 6/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 278.3516 - val_loss: 268.9713 - 2s/epoch - 932us/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 7/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 271.6905 - val_loss: 264.3178 - 2s/epoch - 924us/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 8/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 266.9784 - val_loss: 256.6068 - 2s/epoch - 962us/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 9/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 262.8771 - val_loss: 257.2297 - 2s/epoch - 1ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 10/10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1875/1875 - 2s - loss: 259.5267 - val_loss: 254.3345 - 2s/epoch - 1ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>&lt;keras.callbacks.History at 0x7fe645536e50&gt;</code></pre>
+</div>
+</div>
+<p>Podemos usar o autoencoder para simplificar e depois reconstruir uma imagem:</p>
 <div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># o Keras espera imagens no formato (nobs, altura, largura, canais)</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>im <span class="op">=</span> np.reshape(img, (<span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>, <span class="dv">1</span>)) </span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> conv(im)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>encoded <span class="op">=</span> autoencoder.encoder.predict(x_test)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>decoded <span class="op">=</span> autoencoder.decoder.predict(encoded)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Você pode comparar a imagem gerada pelo Keras e pelo nosso loop e verificar que são idênticas.</p>
+<p>O ‘encoder’ do nosso autoencoder representa cada imagem como um vetor e esse vetor pode ser usado para comparar imagens, ou para ser input de algum outro modelo.</p>
 <div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(out.numpy()[<span class="dv">0</span>, :, :, <span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="20">
-<pre><code>&lt;matplotlib.image.AxesImage at 0x7fb80f1455b0&gt;</code></pre>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>encoded[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>array([ 2.7154648,  3.3469846,  5.0955553,  4.928041 ,  1.4984177,
+        3.5500624,  6.6044536,  4.8169136,  1.8987292,  3.7721162,
+        0.       , 10.673604 ,  3.438078 ,  4.828475 ,  3.6719105,
+        3.3354235,  3.8524048,  6.96551  ,  5.3519597,  6.073485 ,
+        1.730966 ,  3.6241064,  4.7289557,  5.14427  ,  5.7000866,
+        7.9746943,  4.687333 ,  3.6276262,  4.513113 ,  2.5262182,
+        2.7582881,  4.5068583,  5.326924 ,  1.5850337,  2.8732448,
+        2.304493 ,  5.060994 ,  5.387458 ,  0.7613592,  1.4485734,
+        0.       ,  2.7385345,  3.6030219, 13.330053 ,  2.6578474,
+        4.0867414,  4.838855 ,  4.833501 ,  3.9582207,  0.       ,
+        3.4030182,  2.8294477,  5.486768 ,  1.9036677,  3.8831449,
+        3.3715608,  3.5314097,  1.7339928,  3.1415982,  5.773363 ,
+        5.608508 ,  1.4208441,  4.4426064,  2.196546 ], dtype=float32)</code></pre>
 </div>
-<div class="cell-output cell-output-display">
-<p><img src="06-convolution_files/figure-html/cell-11-output-2.png" width="409" height="404"></p>
+</div>
+<p>Visualize a imagem antes e depois:</p>
+<div class="page-columns page-full">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(x_test[<span class="dv">0</span>])</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>plt.imshow(decoded[<span class="dv">0</span>].astype(<span class="st">"uint8"</span>))</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell column-screen-right quarto-layout-panel" data-execution_count="11">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="18-autoencoder_files/figure-html/cell-12-output-1.png" class="img-fluid" width="408"></p>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="18-autoencoder_files/figure-html/cell-12-output-2.png" class="img-fluid" width="408"></p>
+</div>
+</div>
 </div>
 </div>
 
