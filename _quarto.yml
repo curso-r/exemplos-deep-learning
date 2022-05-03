@@ -39,6 +39,7 @@ website:
           - 16-quora.qmd
           - 17-enem.qmd
           - 18-autoencoder.qmd
+          - 19-data-augmentation.qmd
         
 format:
   html:

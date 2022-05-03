@@ -1,0 +1,94 @@
+---
+title: "Data augmentation"
+jupyter: python3
+---
+
+Nesse exemplo vamos mostrar o que é e para que serve técnicas de data augmentation.
+Vamos mostrar no contexto de imagens, mas essa idéia pode valer para diversas 
+outras aplicações.
+
+```{python}
+from tensorflow import keras
+import matplotlib.pyplot as plt
+```
+
+Vamos usar o banco de dados do CIFAR10:
+
+```{python}
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
+```
+
+Data augmentation consiste em usar heurísticas para modificar os dados de uma forma
+que poderia acontecer na vida real. Em imagens é muito comum mudar um pouco o brilho,
+fazer um pouquinho de zoom ou rotacionar um pouco a imagem.
+
+```{python}
+data_augmentation = keras.Sequential([
+  keras.layers.RandomFlip("horizontal"),
+  keras.layers.RandomRotation(0.2)
+])
+```
+
+Vamos ver o que acontece com as imagens depois dessa transformação:
+
+```{python}
+#| column: screen-right
+#| layout-ncol: 2
+plt.imshow(x_train[0])
+plt.show()
+plt.imshow(data_augmentation(x_train[0:1]).numpy()[0].astype("uint8"))
+plt.show()
+```
+
+Fazer essas transformações pode melhorar bastante o acerto do modelo além de 
+ajusar na generalização. É como se estivéssemos fornecendo um banco de dados
+bem maior do que o que possuimos.
+
+Agora podemos definir um modelo que usa essas transformações, ajustar e treinar.
+
+
+```{python}
+class Modelo(keras.Model):
+  def __init__(self):
+    super(Modelo, self).__init__()
+    self.data_augmentation = keras.Sequential([
+      keras.layers.RandomFlip("horizontal"),
+      keras.layers.RandomRotation(0.2)
+    ])
+    self.encoder = keras.Sequential([
+      keras.layers.Conv2D(filters=64, kernel_size=(3,3), activation="relu", padding="same"),
+      keras.layers.MaxPool2D(pool_size=(2,2)),
+      keras.layers.Conv2D(filters=64, kernel_size=(3,3), activation="relu", padding="same"),
+      keras.layers.MaxPool2D(pool_size=(2,2)),
+      keras.layers.Conv2D(filters=64, kernel_size=(3,3), activation="relu", padding="same"),
+      keras.layers.MaxPool2D(pool_size=(2,2)),
+      keras.layers.Flatten()
+    ])
+    self.classifier = keras.Sequential([
+      keras.layers.Dense(128, activation="relu"),
+      keras.layers.Dense(10, activation="softmax")
+    ])
+  def call(self, x):
+    out = self.data_augmentation(x)
+    out = self.encoder(out)
+    return self.classifier(out)
+```
+
+Para compilar usamos:
+
+```{python}
+model = Modelo()
+model.compile(
+  loss = keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+  optimizer = "adam",
+  metrics = ["accuracy"]
+)
+```
+
+E ajustamos com:
+
+```{python}
+model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=5, verbose=2)
+```
+
+

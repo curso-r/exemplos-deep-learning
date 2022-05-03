@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Exemplos Deep Learning - Enem</title>
+<title>Exemplos Deep Learning - Data augmentation</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -115,9 +115,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     "search-submit-button-title": "Submit"
   }
 }</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
-<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 <link rel="stylesheet" href="styles.css">
@@ -129,7 +126,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <header id="quarto-header" class="headroom fixed-top">
   <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
     <div class="container-fluid d-flex justify-content-between">
-      <h1 class="quarto-secondary-nav-title">Enem</h1>
+      <h1 class="quarto-secondary-nav-title">Data augmentation</h1>
       <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
         <i class="bi bi-chevron-right"></i>
       </button>
@@ -272,7 +269,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./17-enem.html" class="sidebar-item-text sidebar-link active">Enem</a>
+  <a href="./17-enem.html" class="sidebar-item-text sidebar-link">Enem</a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -282,7 +279,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./19-data-augmentation.html" class="sidebar-item-text sidebar-link">Data augmentation</a>
+  <a href="./19-data-augmentation.html" class="sidebar-item-text sidebar-link active">Data augmentation</a>
   </div>
 </li>
     </ul>
@@ -297,7 +294,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">Enem</h1>
+<h1 class="title d-none d-lg-block">Data augmentation</h1>
 </div>
 
 
@@ -313,227 +310,115 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p>Nesse exemplo vamos fazer um modelo para classificar as perguntas do ENEM eu seus respectivos temas.</p>
+<p>Nesse exemplo vamos mostrar o que é e para que serve técnicas de data augmentation. Vamos mostrar no contexto de imagens, mas essa idéia pode valer para diversas outras aplicações.</p>
 <div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow <span class="im">import</span> keras</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow <span class="im">import</span> keras</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Carregando os dados:</p>
+<p>Vamos usar o banco de dados do CIFAR10:</p>
 <div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">"https://storage.googleapis.com/deep-learning-com-r/banco_de_questoes.csv"</span>,encoding <span class="op">=</span> <span class="st">'latin2'</span>, sep <span class="op">=</span> <span class="st">";"</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="11">
-<div>
-
-<table class="dataframe table table-sm table-striped">
-  <thead>
-    <tr>
-      <th></th>
-      <th>enunciados</th>
-      <th>url</th>
-      <th>grande_tema</th>
-      <th>subtema</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Uma pessoa precisa comprar 15 sacos de cimento...</td>
-      <td>https://www.projetoagathaedu.com.br/questoes-e...</td>
-      <td>matematica</td>
-      <td>aritmetica-1</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Antônio, Joaquim e José săo sócios de uma empr...</td>
-      <td>https://www.projetoagathaedu.com.br/questoes-e...</td>
-      <td>matematica</td>
-      <td>aritmetica-1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>De acordo com pesquisas recentes, a expectativ...</td>
-      <td>https://www.projetoagathaedu.com.br/questoes-e...</td>
-      <td>matematica</td>
-      <td>aritmetica-1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Um jogo pedagógico é formado por cartas nas qu...</td>
-      <td>https://www.projetoagathaedu.com.br/questoes-e...</td>
-      <td>matematica</td>
-      <td>aritmetica-1</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Em um país, as infraçőes de trânsito săo class...</td>
-      <td>https://www.projetoagathaedu.com.br/questoes-e...</td>
-      <td>matematica</td>
-      <td>aritmetica-1</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>17338</th>
-      <td>Ao final do texto, a autora expőe um posiciona...</td>
-      <td>https://www.projetoagathaedu.com.br/prova-comp...</td>
-      <td>uerj</td>
-      <td>linguagens-2021</td>
-    </tr>
-    <tr>
-      <th>17339</th>
-      <td>As questőes 08 a 11 referem-se ao romance Tri...</td>
-      <td>https://www.projetoagathaedu.com.br/prova-comp...</td>
-      <td>uerj</td>
-      <td>linguagens-2021</td>
-    </tr>
-    <tr>
-      <th>17340</th>
-      <td>5. As questőes 08 a 11 referem-se ao romance ...</td>
-      <td>https://www.projetoagathaedu.com.br/prova-comp...</td>
-      <td>uerj</td>
-      <td>linguagens-2021</td>
-    </tr>
-    <tr>
-      <th>17341</th>
-      <td>As questőes 08 a 11 referem-se ao romance Tri...</td>
-      <td>https://www.projetoagathaedu.com.br/prova-comp...</td>
-      <td>uerj</td>
-      <td>linguagens-2021</td>
-    </tr>
-    <tr>
-      <th>17342</th>
-      <td>As questőes 08 a 11 referem-se ao romance Tri...</td>
-      <td>https://www.projetoagathaedu.com.br/prova-comp...</td>
-      <td>uerj</td>
-      <td>linguagens-2021</td>
-    </tr>
-  </tbody>
-</table>
-<p>17343 rows × 4 columns</p>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(x_train, y_train), (x_test, y_test) <span class="op">=</span> keras.datasets.cifar10.load_data()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-</div>
-<p>Vamos separar a resposta e dados de treino</p>
+<p>Data augmentation consiste em usar heurísticas para modificar os dados de uma forma que poderia acontecer na vida real. Em imagens é muito comum mudar um pouco o brilho, fazer um pouquinho de zoom ou rotacionar um pouco a imagem.</p>
 <div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df.grande_tema.value_counts()</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> df.grande_tema.astype(<span class="st">'category'</span>).cat.codes.astype(<span class="st">"int32"</span>).to_numpy()</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> df.enunciados.astype(<span class="st">"str"</span>).to_numpy()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Agora vamos criar a camada de vetorização:</p>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>vectorize <span class="op">=</span> keras.layers.TextVectorization(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  max_tokens <span class="op">=</span> <span class="dv">10000</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  pad_to_max_tokens<span class="op">=</span><span class="va">True</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>vectorize.adapt(x)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>vocab <span class="op">=</span> vectorize.get_vocabulary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Então podemos definir o modelo</p>
-<div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">input</span> <span class="op">=</span> keras.layers.Input(shape<span class="op">=</span>(), dtype<span class="op">=</span><span class="st">"string"</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> vectorize(<span class="bu">input</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.Embedding(input_dim<span class="op">=</span><span class="bu">len</span>(vocab), output_dim<span class="op">=</span><span class="dv">256</span>)(output)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.LSTM(units<span class="op">=</span><span class="dv">256</span>)(output)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.Dense(units<span class="op">=</span><span class="dv">256</span>, activation<span class="op">=</span><span class="st">"relu"</span>)(output)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> keras.layers.Dense(units<span class="op">=</span>y.<span class="bu">max</span>() <span class="op">+</span> <span class="dv">1</span>, activation<span class="op">=</span><span class="st">"softmax"</span>)(output)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Compilar e ajustar</p>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> keras.Model(inputs<span class="op">=</span><span class="bu">input</span>, outputs<span class="op">=</span>output)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>auc <span class="op">=</span> keras.metrics.AUC(curve<span class="op">=</span><span class="st">"ROC"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">compile</span>(loss<span class="op">=</span><span class="st">"categorical_crossentropy"</span>, optimizer<span class="op">=</span><span class="st">"adam"</span>, metrics<span class="op">=</span>[auc, <span class="st">"accuracy"</span>])</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>model.summary()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Model: "model_1"</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>_________________________________________________________________</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> Layer (type)                Output Shape              Param #   </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>=================================================================</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> input_2 (InputLayer)        [(None,)]                 0         </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                                 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> text_vectorization_1 (TextV  (None, None)             0         </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> ectorization)                                                   </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                                 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> embedding_1 (Embedding)     (None, None, 256)         2560000   </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                                 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> lstm_1 (LSTM)               (None, 256)               525312    </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                                 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> dense_2 (Dense)             (None, 256)               65792     </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                                 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code> dense_3 (Dense)             (None, 116)               29812     </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                                 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>=================================================================</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Total params: 3,180,916</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Trainable params: 3,180,916</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Non-trainable params: 0</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>_________________________________________________________________</code></pre>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>data_augmentation <span class="op">=</span> keras.Sequential([</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  keras.layers.RandomFlip(<span class="st">"horizontal"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  keras.layers.RandomRotation(<span class="fl">0.2</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>2022-05-03 16:40:40.167394: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.</code></pre>
 </div>
 </div>
+<p>Vamos ver o que acontece com as imagens depois dessa transformação:</p>
 <div class="page-columns page-full">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>model.fit(</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  x<span class="op">=</span>x, </span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  y<span class="op">=</span>keras.utils.to_categorical(y),</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  epochs <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  verbose <span class="op">=</span> <span class="dv">2</span></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell column-screen-right quarto-layout-panel" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>plt.imshow(x_train[<span class="dv">0</span>])</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>plt.imshow(data_augmentation(x_train[<span class="dv">0</span>:<span class="dv">1</span>]).numpy()[<span class="dv">0</span>].astype(<span class="st">"uint8"</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell column-screen-right quarto-layout-panel" data-execution_count="4">
 <div class="quarto-layout-row quarto-layout-valign-top">
-<div class="cell-output cell-output-stdout quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
-<pre><code>542/542 - 549s - loss: 4.1006 - auc_1: 0.7647 - accuracy: 0.0834 - 549s/epoch - 1s/step</code></pre>
+<div class="cell-output cell-output-display quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="19-data-augmentation_files/figure-html/cell-5-output-1.png" class="img-fluid" width="408"></p>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="19-data-augmentation_files/figure-html/cell-5-output-2.png" class="img-fluid" width="408"></p>
 </div>
 </div>
-<div class="quarto-layout-row quarto-layout-valign-top">
-<div class="cell-output cell-output-display quarto-layout-cell" data-execution_count="16" style="flex-basis: 100.0%;justify-content: center;">
-<pre><code>&lt;keras.callbacks.History at 0x7fbb71cf01f0&gt;</code></pre>
 </div>
 </div>
+<p>Fazer essas transformações pode melhorar bastante o acerto do modelo além de ajusar na generalização. É como se estivéssemos fornecendo um banco de dados bem maior do que o que possuimos.</p>
+<p>Agora podemos definir um modelo que usa essas transformações, ajustar e treinar.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Modelo(keras.Model):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>(Modelo, <span class="va">self</span>).<span class="fu">__init__</span>()</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.data_augmentation <span class="op">=</span> keras.Sequential([</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      keras.layers.RandomFlip(<span class="st">"horizontal"</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      keras.layers.RandomRotation(<span class="fl">0.2</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.encoder <span class="op">=</span> keras.Sequential([</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      keras.layers.Conv2D(filters<span class="op">=</span><span class="dv">64</span>, kernel_size<span class="op">=</span>(<span class="dv">3</span>,<span class="dv">3</span>), activation<span class="op">=</span><span class="st">"relu"</span>, padding<span class="op">=</span><span class="st">"same"</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      keras.layers.MaxPool2D(pool_size<span class="op">=</span>(<span class="dv">2</span>,<span class="dv">2</span>)),</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      keras.layers.Conv2D(filters<span class="op">=</span><span class="dv">64</span>, kernel_size<span class="op">=</span>(<span class="dv">3</span>,<span class="dv">3</span>), activation<span class="op">=</span><span class="st">"relu"</span>, padding<span class="op">=</span><span class="st">"same"</span>),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>      keras.layers.MaxPool2D(pool_size<span class="op">=</span>(<span class="dv">2</span>,<span class="dv">2</span>)),</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      keras.layers.Conv2D(filters<span class="op">=</span><span class="dv">64</span>, kernel_size<span class="op">=</span>(<span class="dv">3</span>,<span class="dv">3</span>), activation<span class="op">=</span><span class="st">"relu"</span>, padding<span class="op">=</span><span class="st">"same"</span>),</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      keras.layers.MaxPool2D(pool_size<span class="op">=</span>(<span class="dv">2</span>,<span class="dv">2</span>)),</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      keras.layers.Flatten()</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">self</span>.classifier <span class="op">=</span> keras.Sequential([</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      keras.layers.Dense(<span class="dv">128</span>, activation<span class="op">=</span><span class="st">"relu"</span>),</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>      keras.layers.Dense(<span class="dv">10</span>, activation<span class="op">=</span><span class="st">"softmax"</span>)</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> call(<span class="va">self</span>, x):</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> <span class="va">self</span>.data_augmentation(x)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> <span class="va">self</span>.encoder(out)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">self</span>.classifier(out)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Para compilar usamos:</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> Modelo()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">compile</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  loss <span class="op">=</span> keras.losses.SparseCategoricalCrossentropy(from_logits<span class="op">=</span><span class="va">False</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  optimizer <span class="op">=</span> <span class="st">"adam"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  metrics <span class="op">=</span> [<span class="st">"accuracy"</span>]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>E ajustamos com:</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>model.fit(x_train, y_train, validation_data<span class="op">=</span>(x_test, y_test), epochs<span class="op">=</span><span class="dv">5</span>, verbose<span class="op">=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 1/5</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1563/1563 - 93s - loss: 1.9322 - accuracy: 0.3553 - val_loss: 1.6136 - val_accuracy: 0.4348 - 93s/epoch - 60ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 2/5</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1563/1563 - 90s - loss: 1.5953 - accuracy: 0.4297 - val_loss: 1.4945 - val_accuracy: 0.4607 - 90s/epoch - 58ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 3/5</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1563/1563 - 137s - loss: 1.5013 - accuracy: 0.4632 - val_loss: 1.3715 - val_accuracy: 0.5133 - 137s/epoch - 88ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 4/5</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1563/1563 - 122s - loss: 1.4333 - accuracy: 0.4908 - val_loss: 1.3586 - val_accuracy: 0.5198 - 122s/epoch - 78ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 5/5</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1563/1563 - 101s - loss: 1.3687 - accuracy: 0.5101 - val_loss: 1.3509 - val_accuracy: 0.5299 - 101s/epoch - 64ms/step</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>&lt;keras.callbacks.History at 0x7f8b4ed34eb0&gt;</code></pre>
 </div>
 </div>
 
