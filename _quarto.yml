@@ -40,6 +40,7 @@ website:
           - 17-enem.qmd
           - 18-autoencoder.qmd
           - 19-data-augmentation.qmd
+          - 22-recomendation.qmd
       - section: "Ferramentas"
         contents:
           - 20-tensorboard.qmd

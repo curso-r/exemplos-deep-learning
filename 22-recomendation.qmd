@@ -1,0 +1,159 @@
+---
+title: "Recomendação"
+jupyter: python3
+---
+
+Nesse exemplo vamos criar um modelo de recomendação baseado no código [daqui](https://keras.io/examples/structured_data/collaborative_filtering_movielens/)
+
+```{python}
+from tensorflow import keras
+import pandas as pd
+import os
+import tensorflow as tf
+import numpy as np
+```
+
+Vamos primeiro baixar os dados:
+
+```{python}
+movielens_data_file_url = (
+    "http://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
+)
+
+movielens_path = keras.utils.get_file(
+    "ml-latest-small.zip", movielens_data_file_url, extract=True
+)
+
+ratings = os.path.dirname(movielens_path) + "/ml-latest-small" + "/ratings.csv"
+df = pd.read_csv(ratings)
+df
+```
+
+Agora vamos transformar cada usuário e cada filme em um número inteiro, para poder
+usá-los em uma camada de embedding:
+
+```{python}
+user_ids = df["userId"].unique().tolist()
+user2user_encoded = {x: i for i, x in enumerate(user_ids)}
+userencoded2user = {i: x for i, x in enumerate(user_ids)}
+movie_ids = df["movieId"].unique().tolist()
+movie2movie_encoded = {x: i for i, x in enumerate(movie_ids)}
+movie_encoded2movie = {i: x for i, x in enumerate(movie_ids)}
+df["user"] = df["userId"].map(user2user_encoded)
+df["movie"] = df["movieId"].map(movie2movie_encoded)
+df["rating"] = df["rating"]/5
+```
+
+Agora podemos definir um modelo:
+
+```{python}
+class RecommenderNet(keras.Model):
+    def __init__(self, num_users, num_movies, embedding_size, **kwargs):
+      super(RecommenderNet, self).__init__(**kwargs)
+      self.num_users = num_users
+      self.num_movies = num_movies
+      self.embedding_size = embedding_size
+      self.user_embedding = keras.layers.Embedding(
+          num_users,
+          embedding_size,
+          embeddings_initializer="he_normal",
+          embeddings_regularizer=keras.regularizers.l2(1e-6),
+      )
+      self.user_bias = keras.layers.Embedding(num_users, 1)
+      self.movie_embedding = keras.layers.Embedding(
+          num_movies,
+          embedding_size,
+          embeddings_initializer="he_normal",
+          embeddings_regularizer=keras.regularizers.l2(1e-6),
+      )
+      self.movie_bias = keras.layers.Embedding(num_movies, 1)
+      self.dot = keras.layers.Dot(axes=1)
+    def call(self, inputs):
+      users, movies = inputs
+      user_vector = self.user_embedding(users)
+      user_bias = self.user_bias(users)
+      movie_vector = self.movie_embedding(movies)
+      movie_bias = self.movie_bias(movies)
+      dot_user_movie = self.dot([user_vector, movie_vector])
+      x = dot_user_movie + user_bias + movie_bias
+      return tf.nn.sigmoid(x)
+
+```
+
+Vamos então compilar o modelo:
+
+```{python}
+num_users = len(user2user_encoded)
+num_movies = len(movie_encoded2movie)
+
+model = RecommenderNet(num_users, num_movies, 50)
+model.compile(
+    loss=tf.keras.losses.BinaryCrossentropy(), 
+    optimizer=keras.optimizers.Adam(learning_rate=0.001)
+)
+```
+
+Agora podemos ajustar o modelo com:
+
+```{python}
+data = (df.user.to_numpy(), 
+        df.movie.to_numpy())
+
+model.fit(data, df.rating.to_numpy(), 
+    batch_size=64,
+    epochs=5,
+    verbose=2
+    )
+```
+
+Agora para um usuário, podemos ver os filmes recomendados:
+
+```{python}
+movie_df = pd.read_csv(os.path.dirname(movielens_path) + "/ml-latest-small"+ "/movies.csv")
+
+# Let us get a user and see the top recommendations.
+user_id = df.userId.sample(1).iloc[0]
+movies_watched_by_user = df[df.userId == user_id]
+movies_not_watched = movie_df[
+    ~movie_df["movieId"].isin(movies_watched_by_user.movieId.values)
+]["movieId"]
+movies_not_watched = list(
+    set(movies_not_watched).intersection(set(movie2movie_encoded.keys()))
+)
+movies_not_watched = [[movie2movie_encoded.get(x)] for x in movies_not_watched]
+user_encoder = user2user_encoded.get(user_id)
+user_movie_array = np.hstack(
+    ([[user_encoder]] * len(movies_not_watched), movies_not_watched)
+)
+
+ratings = model.predict((user_movie_array[:,0],user_movie_array[:,1])).flatten()
+top_ratings_indices = ratings.argsort()[-10:][::-1]
+recommended_movie_ids = [
+    movie_encoded2movie.get(movies_not_watched[x][0]) for x in top_ratings_indices
+]
+
+print("Showing recommendations for user: {}".format(user_id))
+print("====" * 9)
+print("Movies with high ratings from user")
+print("----" * 8)
+top_movies_user = (
+    movies_watched_by_user.sort_values(by="rating", ascending=False)
+    .head(5)
+    .movieId.values
+)
+movie_df_rows = movie_df[movie_df["movieId"].isin(top_movies_user)]
+for row in movie_df_rows.itertuples():
+    print(row.title, ":", row.genres)
+
+print("----" * 8)
+print("Top 10 movie recommendations")
+print("----" * 8)
+recommended_movies = movie_df[movie_df["movieId"].isin(recommended_movie_ids)]
+for row in recommended_movies.itertuples():
+    print(row.title, ":", row.genres)
+```
+
+
+
+
+
