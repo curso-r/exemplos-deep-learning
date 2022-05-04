@@ -1,0 +1,106 @@
+---
+title: "KerasTuner"
+jupyter: python3
+---
+
+Nesse exemplo vamos usar o KerasTuner para encontrar melhores hiperparâmetros para um modelo.
+
+```{python}
+from tensorflow import keras
+import keras_tuner
+import matplotlib.pyplot as pltX
+```
+
+Vamos tentar encontrar qual o tamanho das convoluções que dá o melhor resultado para
+a base do CIFAR10.
+
+```{python}
+(x, y), (x_test, y_test) = keras.datasets.cifar10.load_data()
+```
+
+Criando a classe para fazer o modelo, assim como no exemplo 19.
+
+```{python}
+class Modelo(keras.Model):
+  def __init__(self, filters):
+    super(Modelo, self).__init__()
+    self.encoder = keras.Sequential([
+      keras.layers.Rescaling(1./255),
+      keras.layers.Conv2D(filters=filters, kernel_size=(3,3), activation="relu", padding="same"),
+      keras.layers.MaxPool2D(pool_size=(2,2)),
+      keras.layers.Conv2D(filters=filters, kernel_size=(3,3), activation="relu", padding="same"),
+      keras.layers.MaxPool2D(pool_size=(2,2)),
+      keras.layers.Conv2D(filters=filters, kernel_size=(3,3), activation="relu", padding="same"),
+      keras.layers.MaxPool2D(pool_size=(2,2)),
+      keras.layers.Flatten()
+    ])
+    self.classifier = keras.Sequential([
+      keras.layers.Dense(128, activation="relu"),
+      keras.layers.Dense(10, activation="softmax")
+    ])
+  def call(self, x):
+    out = self.encoder(x)
+    return self.classifier(out)
+```
+
+Agora vamos definir uma função que inicializa o modelo:
+
+```{python}
+def build_model(hp):
+  model = Modelo(
+    filters=hp.Int("filters", min_value=8, max_value=32, step=4)
+  )
+  model.compile(
+    loss = keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+    optimizer = "adam",
+    metrics = ["accuracy"]
+  )
+  return model
+```
+
+Agora vamos criar um objeto que controla a tunagem do modelo:
+
+```{python}
+tuner = keras_tuner.RandomSearch(
+    hypermodel=build_model,
+    objective="val_accuracy",
+    max_trials=3,
+    overwrite=True,
+    directory="tuning",
+    project_name="cifar10",
+)
+tuner.search_space_summary()
+```
+
+E por fim, podemos iniciar a tunagem:
+
+```{python}
+x_train = x[:-10000]
+x_val = x[-10000:]
+y_train = y[:-10000]
+y_val = y[-10000:]
+tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val), verbose=2)
+```
+
+Agora vemos a lista de modelos que ficaram melhor:
+
+```{python}
+tuner.results_summary(num_trials=3)
+```
+
+No fim, podemos ajustar o modelo final:
+
+```{python}
+best_hps = tuner.get_best_hyperparameters(3)
+model = build_model(best_hps[0])
+model.fit(x=x, y=y, epochs=2, verbose=2)
+```
+
+E avaliar o resultado na base de teste:
+
+```{python}
+model.evaluate(x_test, y_test, verbose=2)
+```
+
+
+

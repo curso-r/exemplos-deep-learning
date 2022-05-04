@@ -40,6 +40,10 @@ website:
           - 17-enem.qmd
           - 18-autoencoder.qmd
           - 19-data-augmentation.qmd
+      - section: "Ferramentas"
+        contents:
+          - 20-tensorboard.qmd
+          - 21-keras-tuner.qmd
         
 format:
   html:

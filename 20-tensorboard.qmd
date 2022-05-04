@@ -1,0 +1,64 @@
+---
+title: "TensorBoard"
+jupyter: python3
+---
+
+TensorBoard é uma ferramenta desenvolvida pela Google, dentro da mesma área que desenvolve o TensorFlow.
+
+Essa ferramenta serve para visualizar o modelo enquanto ele está sendo ajustado, além de oferecer outros tipos de visualização.
+
+Vamos ver um exemplo:
+
+    %pip install tensorboard
+
+Se estiver usando um notebook, pode usar a extensão do tensorboard:
+
+    %load_ext tensorboard
+
+Vamos então definir um modelo e ajustar:
+
+```{python}
+from tensorflow import keras
+import datetime
+```
+
+```{python}
+model = keras.models.Sequential([
+    keras.layers.Flatten(input_shape=(28, 28)),
+    keras.layers.Dense(512, activation='relu'),
+    keras.layers.Dropout(0.2),
+    keras.layers.Dense(10, activation='softmax')
+  ])
+  
+model.compile(
+  optimizer='adam',
+  loss='sparse_categorical_crossentropy',
+  metrics=['accuracy']
+  )
+```
+
+Ao ajustar o modelo usamos o callback `tensorboard` passando um nome de diretório.
+
+```{python}
+#| layout-ncol: 1
+#| column: screen-right
+log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
+
+(x_train, y_train),(x_test, y_test) = keras.datasets.mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+model.fit(x=x_train, 
+          y=y_train, 
+          epochs=5, 
+          validation_data=(x_test, y_test), 
+          callbacks=[tensorboard_callback],
+          verbose=2)
+```
+
+Agora é só iniciar o tensorboard neste diretório:
+
+```
+%tensorboard --logdir logs/fit
+```

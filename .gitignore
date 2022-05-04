@@ -1,3 +1,5 @@
 /env/
 /.quarto/
 .Rproj.user
+logs
+tuning
